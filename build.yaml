@@ -1,0 +1,45 @@
+# build_runner configuration for rest_client_builder.
+#
+# All generated outputs land under:
+#   lib/rest_client_builder/<original-path>/
+#
+# Examples:
+#   lib/models/user.dart
+#     -> lib/rest_client_builder/models/user.g.dart
+#   lib/api/demo_api.dart
+#     -> lib/rest_client_builder/api/demo_api.rest.g.dart
+#   lib/config/app_config.dart
+#     -> lib/rest_client_builder/config/app_config.rest.config.g.dart
+
+
+targets:
+  $default:
+    builders:
+      rest_client_builder|rest_model:
+        enabled: true
+      rest_client_builder|rest_api:
+        enabled: true
+      rest_client_builder|rest_configuration:
+        enabled: true
+
+builders:
+  rest_model:
+    import: "package:rest_client_builder/src/generator/builder.dart"
+    builder_factories: ["restModelBuilder"]
+    build_extensions: {"^lib/{{}}.dart": ["lib/rest_client_builder/{{}}.g.dart"]}
+    auto_apply: dependents
+    build_to: source
+
+  rest_api:
+    import: "package:rest_client_builder/src/generator/builder.dart"
+    builder_factories: ["restApiBuilder"]
+    build_extensions: {"^lib/{{}}.dart": ["lib/rest_client_builder/{{}}.rest.g.dart"]}
+    auto_apply: dependents
+    build_to: source
+
+  rest_configuration:
+    import: "package:rest_client_builder/src/generator/builder.dart"
+    builder_factories: ["restConfigurationBuilder"]
+    build_extensions: {"^lib/{{}}.dart": ["lib/rest_client_builder/{{}}.rest.config.g.dart"]}
+    auto_apply: dependents
+    build_to: source

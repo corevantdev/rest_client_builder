@@ -1,0 +1,15 @@
+name: rest_client_builder_example
+description: Example consumer of the rest_client_builder package.
+publish_to: none
+version: 0.1.0
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  rest_client_builder:
+    path: ../
+
+dev_dependencies:
+  build_runner: ^2.4.15
+  lints: ^5.1.1
