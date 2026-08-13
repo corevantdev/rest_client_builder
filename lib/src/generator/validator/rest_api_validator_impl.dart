@@ -162,6 +162,40 @@ class DefaultRestApiValidator implements RestApiValidator {
       );
     }
 
+    if (method.isSse && method.isStreaming) {
+      issues.add(
+        ValidationIssue(
+          message:
+              '`@SSE` method `${method.name}` cannot also be `@Streaming`.',
+          severity: ValidationSeverity.error,
+          elementName: elementName,
+        ),
+      );
+    }
+
+    if (method.isSse && method.isMultipart) {
+      issues.add(
+        ValidationIssue(
+          message:
+              '`@SSE` method `${method.name}` cannot also be `@Multipart`.',
+          severity: ValidationSeverity.error,
+          elementName: elementName,
+        ),
+      );
+    }
+
+    if (method.isSse && method.isOfflineQueue) {
+      issues.add(
+        ValidationIssue(
+          message:
+              '`@SSE` method `${method.name}` cannot also be `@OfflineQueue`.',
+          severity: ValidationSeverity.error,
+          elementName: elementName,
+        ),
+      );
+    }
+
+
     _validatePathBindings(api, method, issues);
     _validateCancelToken(api, method, issues);
     _validateMultipart(api, method, issues);

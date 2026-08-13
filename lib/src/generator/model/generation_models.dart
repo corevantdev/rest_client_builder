@@ -119,6 +119,7 @@ class RestReturnTypeModel {
     this.isDynamic = false,
     this.isModel = false,
     this.isStreaming = false,
+    this.isSse = false,
     this.modelSourceUri,
   });
 
@@ -152,6 +153,9 @@ class RestReturnTypeModel {
   /// Whether this method streams the raw response bytes (`@Streaming`).
   final bool isStreaming;
 
+  /// Whether this method is a Server-Sent Events stream (`@SSE`).
+  final bool isSse;
+
   /// Optional URI of the model's source file (for importing generated model logic).
   final String? modelSourceUri;
 }
@@ -170,6 +174,13 @@ class RestMethodModel {
     this.isMultipart = false,
     this.isFormUrlEncoded = false,
     this.isStreaming = false,
+    this.isSse = false,
+    this.isOfflineQueue = false,
+    this.offlineQueueRemoveWhen = const <int>[200, 201, 202, 204],
+    this.enqueueOnConnectionError = true,
+    this.enqueueOnTimeout = true,
+    this.enqueueOnServerError = false,
+    this.enqueueOnStatusCodes = const <int>[],
     this.enableLog,
     this.retryMaxAttempts,
     this.retryDelayMs,
@@ -214,6 +225,27 @@ class RestMethodModel {
 
   /// Whether `@Streaming` is present (raw byte-stream response).
   final bool isStreaming;
+
+  /// Whether `@SSE` is present (Server-Sent Events stream).
+  final bool isSse;
+
+  /// Whether `@OfflineQueue` is present.
+  final bool isOfflineQueue;
+
+  /// Status codes that remove the entry from the offline queue on success.
+  final List<int> offlineQueueRemoveWhen;
+
+  /// Queue on connection error/loss.
+  final bool enqueueOnConnectionError;
+
+  /// Queue on request timeout.
+  final bool enqueueOnTimeout;
+
+  /// Queue on 5xx server error.
+  final bool enqueueOnServerError;
+
+  /// Specific status codes that trigger queueing (e.g. 502, 503, 504, 429).
+  final List<int> enqueueOnStatusCodes;
 
   /// Optional method-level log override.
   final bool? enableLog;

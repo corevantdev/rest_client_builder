@@ -96,6 +96,8 @@ extension ${api.name}ClientExtension on RestClient {
             if (method.isMultipart) 'multipart',
             if (method.isFormUrlEncoded) 'form',
             if (method.isStreaming) 'streaming',
+            if (method.isSse) 'sse',
+            if (method.isOfflineQueue) 'offline-queue',
           ];
           final suffix = flags.isEmpty ? '' : ' [${flags.join(', ')}]';
           return '/// | `${method.httpMethod}` | `${_escape(method.path)}` | '
@@ -212,6 +214,11 @@ $entries
   }
 
   String _writeMethod(RestApiClassModel api, RestMethodModel method) {
+    // SSE methods get a special synchronous body — no await, no RestResult.
+    if (method.isSse) {
+      return _writeSseMethod(api, method);
+    }
+
     final signature =
         '${_methodDocumentation(api, method)}\n'
         '  @override\n'
@@ -267,6 +274,49 @@ $entries
 ''';
   }
 
+  /// Generates the body for an @SSE method.
+  String _writeSseMethod(RestApiClassModel api, RestMethodModel method) {
+    final doc = _methodDocumentation(api, method);
+    final signature =
+        '$doc\n'
+        '  @override\n'
+        '  ${method.returnTypeName} ${method.name}(${_parameterList(method)})';
+
+    final body = StringBuffer()
+      ..writeln('final pathParams = <String, String>{')
+      ..writeln(_pathEntries(method))
+      ..writeln('};')
+      ..writeln('final query = <String, String>{')
+      ..writeln(_queryEntries(method))
+      ..writeln('};')
+      ..writeln('final requestHeaders = <String, String>{')
+      ..writeln('  ..._headers,')
+      ..writeln(_headerStaticEntries(method))
+      ..writeln(_headerParamEntries(method))
+      ..writeln('};')
+      ..writeln(
+        "final resolvedPath = resolveRestPath('${_escape(method.path)}', pathParams);",
+      )
+      ..writeln(_urlOverride(method))
+      ..writeln('final httpRequest = BasicRestRequest(')
+      ..writeln("  method: '${method.httpMethod}',")
+      ..writeln('  path: resolvedPath,')
+      ..writeln('  url: absoluteUrl,')
+      ..writeln('  headers: requestHeaders,')
+      ..writeln('  queryParameters: query,')
+      ..writeln('  cancelToken: ${_cancelTokenExpr(method)},')
+      ..writeln('  onReceiveProgress: ${_downloadProgressExpr(method)},')
+      ..writeln('  extras: ${_extrasLiteral(api, method)},')
+      ..writeln(');')
+      ..writeln('return _client.executeSSE(httpRequest);');
+
+    return '''
+  $signature {
+    ${body.toString().split('\n').join('\n    ')}
+  }
+''';
+  }
+
   String _cancelTokenExpr(RestMethodModel method) {
     final param = method.parameters
         .where((parameter) => parameter.kind == RestParameterKind.cancelToken)
@@ -311,12 +361,35 @@ $entries
         retryDelayMs == null &&
         retryStatusCodes == null &&
         enableLog == null &&
-        !method.isStreaming) {
+        !method.isStreaming &&
+        !method.isSse &&
+        !method.isOfflineQueue) {
       return 'const <String, Object?>{}';
     }
     final buffer = StringBuffer('<String, Object?>{');
     if (method.isStreaming) {
       buffer.write("'responseType': 'stream',");
+    }
+    if (method.isSse) {
+      buffer.write("'responseType': 'sse',");
+    }
+    if (method.isOfflineQueue) {
+      buffer.write("'offlineQueue.enabled': true,");
+      buffer.write(
+        "'offlineQueue.removeWhen': <int>[${method.offlineQueueRemoveWhen.join(', ')}],",
+      );
+      buffer.write(
+        "'offlineQueue.enqueueOnConnectionError': ${method.enqueueOnConnectionError},",
+      );
+      buffer.write(
+        "'offlineQueue.enqueueOnTimeout': ${method.enqueueOnTimeout},",
+      );
+      buffer.write(
+        "'offlineQueue.enqueueOnServerError': ${method.enqueueOnServerError},",
+      );
+      buffer.write(
+        "'offlineQueue.enqueueOnStatusCodes': <int>[${method.enqueueOnStatusCodes.join(', ')}],",
+      );
     }
     if (use.isNotEmpty) {
       final names = use.map((name) => "'${_escape(name)}'").join(', ');

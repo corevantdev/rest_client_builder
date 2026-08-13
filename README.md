@@ -30,7 +30,7 @@ Declare endpoints once. Call generated type-safe clients directly (`userService.
 ```yaml
 # pubspec.yaml
 dependencies:
-  rest_client_builder: ^1.3.3
+  rest_client_builder: ^1.3.4
 
 dev_dependencies:
   build_runner: ^2.4.15
@@ -340,6 +340,87 @@ result.fold(
 - Return type **must** be `Future<RestResult<Stream<List<int>>>>`. Other return types will cause a build-time error.
 - Cannot be combined with `@Multipart` or `@FormUrlEncoded` (streaming is for downloads).
 - Cancel tokens and `onReceiveProgress` work normally.
+
+---
+
+## Server-Sent Events (`@SSE`)
+
+Subscribe to live HTTP event streams with zero boilerplate using `@SSE`:
+
+```dart
+@RestApi(baseUrl: 'https://api.example.com')
+abstract class NotificationApi {
+  /// Stream live events from server.
+  @SSE()
+  @GET('/events/stream')
+  Stream<SSEEvent> watchEvents();
+}
+```
+
+Consuming events:
+
+```dart
+notificationApi.watchEvents().listen(
+  (event) {
+    print('Event: ${event.event}, Data: ${event.data}, ID: ${event.id}');
+  },
+  onError: (error) => print('Stream error: $error'),
+);
+```
+
+- **Returns `Stream<SSEEvent>` directly** (no `Future` or `RestResult` wrapper).
+- **HTML §9.2 Spec Compliant**: Parses `data:`, `event:`, `id:`, `retry:`, ignores comment lines (`:`), and concatenates multi-line data.
+
+---
+
+## Resilient Request Queue (`@ResilientQueue` / `@OfflineQueue`)
+
+Automatically save and replay failed requests when network drops, connections timeout, or server errors (e.g. 502, 503, 429) occur:
+
+```dart
+@RestApi(baseUrl: 'https://api.example.com')
+abstract class OrderApi {
+  /// Auto-queues on network loss, timeout, or 502/503/429 status codes, and removes from queue on HTTP 200/201.
+  @ResilientQueue(
+    removeWhen: [200, 201],
+    enqueueOnStatusCodes: [502, 503, 504, 429],
+  )
+  @POST('/orders')
+  Future<RestResult<Order>> createOrder(@Body() Order order);
+}
+```
+
+> **Note:** `@OfflineQueue` is supported as a backward-compatible alias for `@ResilientQueue`.
+
+
+### Setup & Flushed Replay
+
+```dart
+final offlineQueue = RestRequestQueue();
+
+// Register interceptor on client config:
+final clientConfig = BasicRestClientConfig(
+  interceptors: [
+    RestQueueInterceptor(
+      queue: offlineQueue,
+      onQueued: (request, item) => print('Saved offline: ${request.path}'),
+    ),
+  ],
+);
+
+// Inspect or observe queued non-synced requests in UI:
+print('Pending offline syncs: ${offlineQueue.length}');
+offlineQueue.itemsStream.listen((items) {
+  print('Queued requests: ${items.map((e) => e.request.path)}');
+});
+
+// Replay all pending requests when network is restored:
+final flushResult = await offlineQueue.flush(client);
+print('Synced ${flushResult.succeeded} requests (${flushResult.kept} remaining)');
+```
+
+- **Filter/Cancel**: Use `offlineQueue.removeWhere((item) => ...)` or `offlineQueue.clear()`.
+- **Custom Dequeue**: Pass a `RestQueueResolver` implementation to `offlineQueue.flush(client, resolver: MyResolver())` for complex removal conditions.
 
 ---
 

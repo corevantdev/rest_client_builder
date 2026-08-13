@@ -106,4 +106,23 @@ abstract class DemoApi {
     @Cancel() CancelToken? cancelToken,
     RestProgressCallback? onReceiveProgress,
   });
+
+  // ── New: Server-Sent Events via @SSE ──────────────────────────────────────
+
+  /// Subscribes to live user activity events over an SSE connection.
+  @SSE()
+  @GET('/events/stream')
+  Stream<SSEEvent> watchEvents();
+
+  // ── New: Resilient Request Queue via @ResilientQueue / @OfflineQueue ─────
+
+  /// Creates a user with resilient queueing enabled for network drops, timeouts, or 502/503 errors.
+  @ResilientQueue(
+    removeWhen: [200, 201],
+    enqueueOnStatusCodes: [502, 503, 504, 429],
+  )
+  @POST('/offline-users')
+  Future<RestResult<User>> createOfflineUser(@Body() User user);
 }
+
+

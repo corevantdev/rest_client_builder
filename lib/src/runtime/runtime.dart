@@ -26,8 +26,12 @@ export 'multipart/rest_multipart_body.dart';
 export 'multipart/rest_multipart_part.dart';
 export 'multipart/rest_part.dart';
 export 'progress/progress_callback.dart';
+export 'queue/rest_queue_interceptor.dart';
+export 'queue/rest_queue_resolver.dart';
+export 'queue/rest_request_queue.dart';
 export 'request/basic_rest_request.dart';
 export 'request/rest_body_type.dart';
 export 'request/rest_request.dart';
 export 'response/basic_rest_response.dart';
 export 'response/rest_response.dart';
+

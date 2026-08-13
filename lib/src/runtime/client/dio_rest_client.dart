@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 
 import '../../core/error/rest_error.dart';
 import '../../core/result/rest_result.dart';
+import '../../core/sse/sse_event.dart';
+import '../../core/sse/sse_parser.dart';
 import '../cache/rest_response_cache.dart';
 import '../config/rest_client_config.dart';
 import '../config/rest_execution_options.dart';
@@ -15,6 +19,7 @@ import '../request/rest_request.dart';
 import '../response/rest_response.dart';
 import 'rest_client.dart';
 import 'rest_response_mapper.dart';
+
 
 /// Dio-powered [RestClient] with global config, retry, timeouts, logging,
 /// headers, and interceptor resolution.
@@ -160,6 +165,86 @@ class DioRestClient implements RestClient {
         Failure<RestResponse>(
             RestError.unknown('Request failed without result'));
   }
+
+  @override
+  Stream<SSEEvent> executeSSE(RestRequest request) {
+    final sseHeaders = <String, String>{
+      'Accept': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      ...request.headers,
+    };
+
+    final sseExtras = <String, Object?>{
+      ...request.extras,
+      'responseType': 'stream',
+    };
+
+    RestRequest sseRequest;
+    if (request is BasicRestRequest) {
+      sseRequest = request.copyWith(headers: sseHeaders, extras: sseExtras);
+    } else {
+      sseRequest = BasicRestRequest(
+        method: request.method,
+        path: request.path,
+        url: request.url,
+        headers: sseHeaders,
+        queryParameters: request.queryParameters,
+        body: request.body,
+        bodyType: request.bodyType,
+        multipartBody: request.multipartBody,
+        connectTimeoutMs: request.connectTimeoutMs,
+        receiveTimeoutMs: request.receiveTimeoutMs,
+        sendTimeoutMs: request.sendTimeoutMs,
+        cancelToken: request.cancelToken,
+        onSendProgress: request.onSendProgress,
+        onReceiveProgress: request.onReceiveProgress,
+        extras: sseExtras,
+      );
+    }
+
+    final prepared = _prepareRequest(sseRequest);
+    final controller = StreamController<SSEEvent>();
+
+    _engine.send(prepared).then((response) {
+      if (!response.isSuccess) {
+        controller.addError(
+          RestError.http(
+            'HTTP ${response.statusCode}',
+            statusCode: response.statusCode,
+          ),
+        );
+        controller.close();
+        return;
+      }
+      final data = response.data;
+      if (data != null) {
+        try {
+          // ignore: avoid_dynamic_calls
+          final dynamic maybeStream = (data as dynamic).stream;
+          if (maybeStream is Stream) {
+            final typed = maybeStream.cast<List<int>>();
+            SseParser.parse(typed).listen(
+              controller.add,
+              onError: controller.addError,
+              onDone: controller.close,
+            );
+            return;
+          }
+        } catch (e, st) {
+          controller.addError(RestError.fromException(e, st));
+          controller.close();
+          return;
+        }
+      }
+      controller.close();
+    }).catchError((Object error, StackTrace stackTrace) {
+      controller.addError(RestError.fromException(error, stackTrace));
+      controller.close();
+    });
+
+    return controller.stream;
+  }
+
 
   RestRequest _prepareRequest(RestRequest request) {
     final headers = <String, String>{

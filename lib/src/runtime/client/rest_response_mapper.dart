@@ -2,6 +2,7 @@ import 'dart:async';
 
 import '../../core/error/rest_error.dart';
 import '../../core/result/rest_result.dart';
+import '../../core/sse/sse_event.dart';
 import '../client/rest_client.dart';
 import '../config/rest_client_config.dart';
 import '../interceptor/rest_interceptor.dart';
@@ -15,10 +16,14 @@ class CallbackRestClient implements RestClient {
   CallbackRestClient({
     required this.onExecute,
     RestClientConfig? config,
+    this.onExecuteSSE,
   }) : config = config ?? const BasicRestClientConfig();
 
   /// Handler invoked by generated API methods.
   final Future<RestResult<RestResponse>> Function(RestRequest request) onExecute;
+
+  /// Handler invoked by SSE API methods.
+  final Stream<SSEEvent> Function(RestRequest request)? onExecuteSSE;
 
   @override
   final RestClientConfig config;
@@ -26,6 +31,10 @@ class CallbackRestClient implements RestClient {
   @override
   Future<RestResult<RestResponse>> execute(RestRequest request) =>
       onExecute(request);
+
+  @override
+  Stream<SSEEvent> executeSSE(RestRequest request) =>
+      onExecuteSSE != null ? onExecuteSSE!(request) : const Stream.empty();
 }
 
 /// Minimal concrete [RestClientConfig].

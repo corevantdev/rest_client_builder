@@ -1,4 +1,5 @@
 import '../../core/result/rest_result.dart';
+import '../../core/sse/sse_event.dart';
 import '../config/rest_client_config.dart';
 import '../request/rest_request.dart';
 import '../response/rest_response.dart';
@@ -15,6 +16,9 @@ abstract interface class RestClient {
   ///
   /// Returns [Success] with a [RestResponse] or [Failure] with a [RestError].
   Future<RestResult<RestResponse>> execute(RestRequest request);
+
+  /// Executes an SSE request and returns a live stream of [SSEEvent]s.
+  Stream<SSEEvent> executeSSE(RestRequest request);
 }
 
 /// Low-level HTTP transport abstraction.

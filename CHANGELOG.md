@@ -6,6 +6,34 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## 1.3.5
+
+- **Renamed to `@ResilientQueue` (`@OfflineQueue` preserved as alias)**:
+  - Renamed primary annotation to `@ResilientQueue` to convey network stability, breakable connection resilience, rate limiting, and server error retries.
+  - `@OfflineQueue` is supported as a backward-compatible typedef alias (`typedef OfflineQueue = ResilientQueue;`).
+- **Status Code Trigger Configuration (`enqueueOnStatusCodes`)**:
+  - Added `enqueueOnStatusCodes: List<int>` (e.g. `[502, 503, 504, 429]`) to specify HTTP status codes that automatically trigger queueing in `RestQueueInterceptor`.
+
+---
+
+## 1.3.4
+
+### New Features
+
+- **`@SSE` — Server-Sent Events Annotation (`Stream<SSEEvent>`)**:
+  - Annotate API methods with `@SSE` to subscribe to live Server-Sent Event streams (`lib/src/annotations/http/sse_annotation.dart`).
+  - Spec-compliant HTML §9.2 parser (`SseParser`) handling `data:`, `event:`, `id:`, `retry:`, comments (`:`), and multi-line data concatenation.
+  - Direct `Stream<SSEEvent>` return type support without `Future` or `RestResult` wrapping.
+  - Runtime execution support in `DioRestClient.executeSSE()`.
+
+- **`@OfflineQueue` — Resilient Offline Request Queueing**:
+  - Declarative `@OfflineQueue` annotation for auto-queueing failed requests on connection drop, timeout, or 5xx server error (`lib/src/annotations/queue/offline_queue_annotation.dart`).
+  - `RestRequestQueue` in-memory queue engine with reactive live stream (`itemsStream`), item list (`items`), filtering/removal (`removeWhere`), and flush replay (`flush`).
+  - `RestQueueInterceptor` for auto-enqueueing failed requests matching trigger rules.
+  - Custom removal logic support via `RestQueueResolver`.
+
+---
+
 ## 1.3.3
 
 ### New Features

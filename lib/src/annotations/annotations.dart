@@ -11,7 +11,9 @@ export 'cache/cache_annotation.dart';
 export 'configuration/configuration_annotations.dart';
 export 'form/form_annotations.dart';
 export 'http/http_annotations.dart';
+export 'http/sse_annotation.dart';
 export 'http/streaming_annotation.dart';
+export 'queue/offline_queue_annotation.dart';
 
 export 'models/rest_model.dart';
 export 'multipart/multipart_annotations.dart';

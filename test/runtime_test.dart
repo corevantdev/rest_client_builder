@@ -47,6 +47,9 @@ class _StubClient implements RestClient {
       RestError.unknown('HTTP engine not implemented'),
     );
   }
+
+  @override
+  Stream<SSEEvent> executeSSE(RestRequest request) => const Stream.empty();
 }
 
 void main() {

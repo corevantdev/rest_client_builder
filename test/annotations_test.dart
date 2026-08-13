@@ -62,6 +62,34 @@ void main() {
       expect(put.path, '/users/{id}');
       expect(const GET().path, isEmpty);
     });
+
+    test('SSE annotation constructor retains reconnectMs', () {
+      const sse = SSE(reconnectMs: 5000);
+      expect(sse.reconnectMs, 5000);
+      expect(const SSE().reconnectMs, 3000);
+    });
+
+    test('ResilientQueue annotation constructor retains defaults and custom options', () {
+      const queue = ResilientQueue(
+        removeWhen: [200, 201],
+        enqueueOnConnectionError: true,
+        enqueueOnTimeout: false,
+        enqueueOnServerError: true,
+        enqueueOnStatusCodes: [502, 503],
+      );
+      expect(queue.removeWhen, [200, 201]);
+      expect(queue.enqueueOnConnectionError, isTrue);
+      expect(queue.enqueueOnTimeout, isFalse);
+      expect(queue.enqueueOnServerError, isTrue);
+      expect(queue.enqueueOnStatusCodes, [502, 503]);
+
+      const defaults = ResilientQueue();
+      expect(defaults.removeWhen, [200, 201, 202, 204]);
+      expect(defaults.enqueueOnConnectionError, isTrue);
+      expect(defaults.enqueueOnTimeout, isTrue);
+      expect(defaults.enqueueOnServerError, isFalse);
+      expect(defaults.enqueueOnStatusCodes, isEmpty);
+    });
   });
 
   group('parameter annotations', () {

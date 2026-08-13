@@ -10,9 +10,11 @@ import '../../annotations/cache/cache_annotation.dart';
 import '../../annotations/configuration/configuration_annotations.dart';
 import '../../annotations/form/form_annotations.dart';
 import '../../annotations/http/http_annotations.dart';
+import '../../annotations/http/sse_annotation.dart';
 import '../../annotations/http/streaming_annotation.dart';
 import '../../annotations/multipart/multipart_annotations.dart';
 import '../../annotations/parameters/parameter_annotations.dart';
+import '../../annotations/queue/offline_queue_annotation.dart';
 import '../../core/result/rest_result.dart';
 import '../model/generation_models.dart';
 import 'library_model_visitor.dart';
@@ -88,6 +90,19 @@ class DefaultRestApiVisitor implements RestApiVisitor {
     Streaming,
     inPackage: 'rest_client_builder',
   );
+  static const _sse = TypeChecker.typeNamed(
+    SSE,
+    inPackage: 'rest_client_builder',
+  );
+  static const _offlineQueue = TypeChecker.typeNamed(
+    OfflineQueue,
+    inPackage: 'rest_client_builder',
+  );
+  static const _resilientQueue = TypeChecker.typeNamed(
+    ResilientQueue,
+    inPackage: 'rest_client_builder',
+  );
+
   static const _multipart = TypeChecker.typeNamed(
     Multipart,
     inPackage: 'rest_client_builder',
@@ -223,6 +238,14 @@ class DefaultRestApiVisitor implements RestApiVisitor {
   ) {
     final http = _readHttpMethod(element);
     if (http == null) {
+      // Check for @SSE — which needs an HTTP method annotation too.
+      if (_sse.hasAnnotationOf(element, throwOnUnresolved: false)) {
+        throw InvalidGenerationSourceError(
+          '@SSE on `${element.name}` requires a verb annotation '
+          '(e.g. @GET, @HTTP).',
+          element: element,
+        );
+      }
       return null;
     }
 
@@ -231,11 +254,50 @@ class DefaultRestApiVisitor implements RestApiVisitor {
       throwOnUnresolved: false,
     );
 
+    final isSse = _sse.hasAnnotationOf(element, throwOnUnresolved: false);
+
+    // Read @ResilientQueue / @OfflineQueue fields.
+    final offlineAnnotation = _resilientQueue.firstAnnotationOf(
+          element,
+          throwOnUnresolved: false,
+        ) ??
+        _offlineQueue.firstAnnotationOf(
+          element,
+          throwOnUnresolved: false,
+        );
+    final isOfflineQueue = offlineAnnotation != null;
+    final offlineReader =
+        offlineAnnotation != null ? ConstantReader(offlineAnnotation) : null;
+    final offlineQueueRemoveWhen = offlineReader
+            ?.peek('removeWhen')
+            ?.listValue
+            .map((e) => e.toIntValue() ?? 200)
+            .toList() ??
+        const <int>[200, 201, 202, 204];
+    final enqueueOnConnectionError =
+        offlineReader?.peek('enqueueOnConnectionError')?.boolValue ?? true;
+    final enqueueOnTimeout =
+        offlineReader?.peek('enqueueOnTimeout')?.boolValue ?? true;
+    final enqueueOnServerError =
+        offlineReader?.peek('enqueueOnServerError')?.boolValue ?? false;
+    final enqueueOnStatusCodes = offlineReader
+            ?.peek('enqueueOnStatusCodes')
+            ?.listValue
+            .map((e) => e.toIntValue() ?? 0)
+            .where((code) => code > 0)
+            .toList() ??
+        const <int>[];
+
+
     return RestMethodModel(
       name: element.name ?? '',
       httpMethod: http.method,
       path: _joinPaths(pathPrefix, http.path),
-      returnType: _parseReturnType(element, isStreaming: isStreaming),
+      returnType: _parseReturnType(
+        element,
+        isStreaming: isStreaming,
+        isSse: isSse,
+      ),
       parameters: [
         for (final parameter in element.formalParameters)
           visitParameter(parameter),
@@ -250,6 +312,13 @@ class DefaultRestApiVisitor implements RestApiVisitor {
         throwOnUnresolved: false,
       ),
       isStreaming: isStreaming,
+      isSse: isSse,
+      isOfflineQueue: isOfflineQueue,
+      offlineQueueRemoveWhen: offlineQueueRemoveWhen,
+      enqueueOnConnectionError: enqueueOnConnectionError,
+      enqueueOnTimeout: enqueueOnTimeout,
+      enqueueOnServerError: enqueueOnServerError,
+      enqueueOnStatusCodes: enqueueOnStatusCodes,
       useInterceptors: _readInterceptorTypes(element, _useInterceptor),
       excludeInterceptors: _readInterceptorTypes(element, _excludeInterceptor),
       enableLog: _readBoolAnnotation(element, _enableLog, 'enabled'),
@@ -351,10 +420,31 @@ class DefaultRestApiVisitor implements RestApiVisitor {
   RestReturnTypeModel _parseReturnType(
     MethodElement element, {
     bool isStreaming = false,
+    bool isSse = false,
   }) {
     final raw = element.returnType.getDisplayString();
     var type = element.returnType;
     var isFuture = false;
+
+    // SSE methods return Stream<SSEEvent> directly — no Future or RestResult wrap.
+    if (isSse) {
+      final isStream = type is InterfaceType &&
+          type.isDartAsyncStream;
+      if (!isStream) {
+        throw InvalidGenerationSourceError(
+          '@SSE methods must return `Stream<SSEEvent>` '
+          '(found `$raw` on `${element.name}`).',
+          element: element,
+        );
+      }
+      return RestReturnTypeModel(
+        rawTypeName: raw,
+        isFuture: false,
+        isRestResult: false,
+        isSse: true,
+        resultTypeName: 'SSEEvent',
+      );
+    }
 
     if (type.isDartAsyncFuture || type.isDartAsyncFutureOr) {
       isFuture = true;
