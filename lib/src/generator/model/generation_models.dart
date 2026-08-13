@@ -118,6 +118,7 @@ class RestReturnTypeModel {
     this.isMap = false,
     this.isDynamic = false,
     this.isModel = false,
+    this.isStreaming = false,
     this.modelSourceUri,
   });
 
@@ -148,6 +149,9 @@ class RestReturnTypeModel {
   /// Whether [resultTypeName] should be decoded via `Type.fromJson`.
   final bool isModel;
 
+  /// Whether this method streams the raw response bytes (`@Streaming`).
+  final bool isStreaming;
+
   /// Optional URI of the model's source file (for importing generated model logic).
   final String? modelSourceUri;
 }
@@ -165,6 +169,7 @@ class RestMethodModel {
     this.tags = const <String>[],
     this.isMultipart = false,
     this.isFormUrlEncoded = false,
+    this.isStreaming = false,
     this.enableLog,
     this.retryMaxAttempts,
     this.retryDelayMs,
@@ -206,6 +211,9 @@ class RestMethodModel {
 
   /// Whether `@FormUrlEncoded` is present.
   final bool isFormUrlEncoded;
+
+  /// Whether `@Streaming` is present (raw byte-stream response).
+  final bool isStreaming;
 
   /// Optional method-level log override.
   final bool? enableLog;

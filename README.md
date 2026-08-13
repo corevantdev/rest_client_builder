@@ -18,6 +18,9 @@ Declare endpoints once. Call generated type-safe clients directly (`userService.
 - **Memory-Safe Multipart**: `RestPart.fromBytes` / `RestPart.fromBase64` (web & Flutter friendly, no `dart:io` `File` dependency).
 - **Cancel & Progress Callbacks**: Built-in `CancelToken`, `onSendProgress`, and `onReceiveProgress`.
 - **Interceptors & Security**: Class-level or method-level `@UseInterceptor` and `@ExcludeInterceptor`.
+- **Response Caching**: In-memory `@Cache` annotation with configurable TTL per method or class.
+- **Custom HTTP Verbs (`@HTTP`)**: Beyond `@GET`/`@POST` — support WebDAV (`REPORT`, `COPY`, `LOCK`), CDN (`PURGE`), and any custom protocol verb.
+- **Streaming Downloads (`@Streaming`)**: Receive large files/video as a raw `Stream<List<int>>` without buffering into RAM.
 - **Compile-Time Safety**: Fails at `build_runner` build time on invalid route syntax, GET+Body, missing path placeholders, or invalid multipart settings.
 
 ---
@@ -27,7 +30,7 @@ Declare endpoints once. Call generated type-safe clients directly (`userService.
 ```yaml
 # pubspec.yaml
 dependencies:
-  rest_client_builder: ^1.3.2
+  rest_client_builder: ^1.3.3
 
 dev_dependencies:
   build_runner: ^2.4.15
@@ -260,6 +263,83 @@ abstract class DemoApi {
   Future<RestResult<User>> login(@Field('email') String email, @Field('password') String password);
 }
 ```
+
+---
+
+## Custom HTTP Verbs (`@HTTP`)
+
+For protocols and standards beyond the standard verbs — WebDAV, CDN purges, IETF extensions — use `@HTTP`:
+
+```dart
+@RestApi(baseUrl: 'https://api.example.com')
+abstract class AdminApi {
+  /// WebDAV: query collection metadata.
+  @HTTP('REPORT', '/users/analytics')
+  Future<RestResult<Map<String, dynamic>>> reportAnalytics(
+    @Body() Map<String, dynamic> query,
+  );
+
+  /// CDN: purge a cached resource.
+  @HTTP('PURGE', '/cache/{key}')
+  Future<RestResult<void>> purgeCache(@Path('key') String key);
+
+  /// Copy a document (WebDAV).
+  @HTTP('COPY', '/docs/{id}')
+  Future<RestResult<void>> copyDoc(
+    @Path('id') String id,
+    @Header('Destination') String destination,
+  );
+}
+```
+
+- **Method string is auto-uppercased**: `@HTTP('get', ...)` → sends `GET`.
+- **All standard parameter annotations work**: `@Body`, `@Path`, `@Query`, `@Header`, `@Part`, `@Field`, etc.
+- **`@Multipart` and `@FormUrlEncoded` supported** on `@HTTP` methods just like standard verbs.
+
+---
+
+## Streaming Downloads (`@Streaming`)
+
+For large files, videos, or byte streams where buffering the entire body into RAM is not acceptable:
+
+```dart
+@RestApi(baseUrl: 'https://cdn.example.com')
+abstract class FileApi {
+  /// Download a file as a raw byte stream (zero-copy, memory-efficient).
+  @Streaming()
+  @GET('/files/{id}')
+  Future<RestResult<Stream<List<int>>>> downloadFile(
+    @Path('id') String id, {
+    @Query('format') String? format,
+    @Cancel() CancelToken? cancelToken,
+    RestProgressCallback? onReceiveProgress,
+  });
+}
+```
+
+Consuming the stream:
+
+```dart
+final result = await fileApi.downloadFile('report-2024.pdf',
+  onReceiveProgress: (received, total) =>
+    print('${(received / total * 100).toStringAsFixed(1)}%'),
+);
+
+result.fold(
+  onFailure: (error) => print('Download failed: ${error.message}'),
+  onSuccess: (stream) async {
+    final sink = File('report.pdf').openWrite();
+    await stream.pipe(sink);
+    await sink.close();
+    print('Download complete!');
+  },
+);
+```
+
+**Rules for `@Streaming`:**
+- Return type **must** be `Future<RestResult<Stream<List<int>>>>`. Other return types will cause a build-time error.
+- Cannot be combined with `@Multipart` or `@FormUrlEncoded` (streaming is for downloads).
+- Cancel tokens and `onReceiveProgress` work normally.
 
 ---
 

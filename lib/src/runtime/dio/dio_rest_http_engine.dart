@@ -38,6 +38,7 @@ class DioRestHttpEngine implements RestHttpEngine {
   @override
   Future<RestResponse> send(RestRequest request) async {
     final uri = _resolveUri(request);
+    final isStream = request.extras['responseType'] == 'stream';
     final options = Options(
       method: request.method,
       headers: request.headers,
@@ -49,6 +50,7 @@ class DioRestHttpEngine implements RestHttpEngine {
       validateStatus: (_) => true,
       contentType: _contentType(request),
       listFormat: ListFormat.multi,
+      responseType: isStream ? ResponseType.stream : null,
     );
 
     try {
@@ -67,11 +69,11 @@ class DioRestHttpEngine implements RestHttpEngine {
             ? null
             : (count, total) => request.onReceiveProgress!(count, total),
       );
-      return _toRestResponse(request, response);
+      return _toRestResponse(request, response, isStream: isStream);
     } on DioException catch (error) {
       final response = error.response;
       if (response != null) {
-        return _toRestResponse(request, response);
+        return _toRestResponse(request, response, isStream: isStream);
       }
       throw DioErrorMapper.fromDioException(error);
     } on RestError {
@@ -178,14 +180,45 @@ class DioRestHttpEngine implements RestHttpEngine {
 
   RestResponse _toRestResponse(
     RestRequest request,
-    Response<dynamic> response,
-  ) {
+    Response<dynamic> response, {
+    bool isStream = false,
+  }) {
     final headers = <String, String>{};
     response.headers.map.forEach((key, values) {
       headers[key] = values.join(',');
     });
 
     final data = response.data;
+
+    // For streaming responses, store the raw ResponseBody in data so that
+    // RestResponseMapper.mapStream() can pull .stream off it directly.
+    if (isStream) {
+      return BasicRestResponse(
+        statusCode: response.statusCode ?? 0,
+        headers: headers,
+        data: data, // Dio ResponseBody
+        request: request is BasicRestRequest
+            ? request
+            : BasicRestRequest(
+                method: request.method,
+                path: request.path,
+                url: request.url,
+                headers: request.headers,
+                queryParameters: request.queryParameters,
+                body: request.body,
+                bodyType: request.bodyType,
+                multipartBody: request.multipartBody,
+                connectTimeoutMs: request.connectTimeoutMs,
+                receiveTimeoutMs: request.receiveTimeoutMs,
+                sendTimeoutMs: request.sendTimeoutMs,
+                cancelToken: request.cancelToken,
+                onSendProgress: request.onSendProgress,
+                onReceiveProgress: request.onReceiveProgress,
+                extras: request.extras,
+              ),
+      );
+    }
+
     String? bodyString;
     if (data is String) {
       bodyString = data;

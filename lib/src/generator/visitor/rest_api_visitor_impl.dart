@@ -10,6 +10,7 @@ import '../../annotations/cache/cache_annotation.dart';
 import '../../annotations/configuration/configuration_annotations.dart';
 import '../../annotations/form/form_annotations.dart';
 import '../../annotations/http/http_annotations.dart';
+import '../../annotations/http/streaming_annotation.dart';
 import '../../annotations/multipart/multipart_annotations.dart';
 import '../../annotations/parameters/parameter_annotations.dart';
 import '../../core/result/rest_result.dart';
@@ -77,6 +78,14 @@ class DefaultRestApiVisitor implements RestApiVisitor {
   );
   static const _options = TypeChecker.typeNamed(
     OPTIONS,
+    inPackage: 'rest_client_builder',
+  );
+  static const _http = TypeChecker.typeNamed(
+    HTTP,
+    inPackage: 'rest_client_builder',
+  );
+  static const _streaming = TypeChecker.typeNamed(
+    Streaming,
     inPackage: 'rest_client_builder',
   );
   static const _multipart = TypeChecker.typeNamed(
@@ -217,11 +226,16 @@ class DefaultRestApiVisitor implements RestApiVisitor {
       return null;
     }
 
+    final isStreaming = _streaming.hasAnnotationOf(
+      element,
+      throwOnUnresolved: false,
+    );
+
     return RestMethodModel(
       name: element.name ?? '',
       httpMethod: http.method,
       path: _joinPaths(pathPrefix, http.path),
-      returnType: _parseReturnType(element),
+      returnType: _parseReturnType(element, isStreaming: isStreaming),
       parameters: [
         for (final parameter in element.formalParameters)
           visitParameter(parameter),
@@ -235,6 +249,7 @@ class DefaultRestApiVisitor implements RestApiVisitor {
         element,
         throwOnUnresolved: false,
       ),
+      isStreaming: isStreaming,
       useInterceptors: _readInterceptorTypes(element, _useInterceptor),
       excludeInterceptors: _readInterceptorTypes(element, _excludeInterceptor),
       enableLog: _readBoolAnnotation(element, _enableLog, 'enabled'),
@@ -314,15 +329,29 @@ class DefaultRestApiVisitor implements RestApiVisitor {
       );
       if (annotation != null) {
         final reader = ConstantReader(annotation);
-        // HttpMethod.path is positional field on subclass via super.
         final path = reader.peek('path')?.stringValue ?? '';
         return (method: entry.$2, path: path);
       }
     }
+    // Generic @HTTP annotation — any custom verb.
+    final httpAnnotation = _http.firstAnnotationOf(
+      element,
+      throwOnUnresolved: false,
+    );
+    if (httpAnnotation != null) {
+      final reader = ConstantReader(httpAnnotation);
+      // HttpMethod stores the verb in the 'method' field.
+      final rawMethod = reader.peek('method')?.stringValue ?? 'GET';
+      final path = reader.peek('path')?.stringValue ?? '';
+      return (method: rawMethod.toUpperCase(), path: path);
+    }
     return null;
   }
 
-  RestReturnTypeModel _parseReturnType(MethodElement element) {
+  RestReturnTypeModel _parseReturnType(
+    MethodElement element, {
+    bool isStreaming = false,
+  }) {
     final raw = element.returnType.getDisplayString();
     var type = element.returnType;
     var isFuture = false;
@@ -330,6 +359,25 @@ class DefaultRestApiVisitor implements RestApiVisitor {
     if (type.isDartAsyncFuture || type.isDartAsyncFutureOr) {
       isFuture = true;
       type = (type as InterfaceType).typeArguments.first;
+    }
+
+    // Streaming methods must return Future<RestResult<Stream<List<int>>>>.
+    if (isStreaming) {
+      final isRestResult = _restResult.isAssignableFromType(type);
+      if (!isRestResult) {
+        throw InvalidGenerationSourceError(
+          '@Streaming methods must return `Future<RestResult<Stream<List<int>>>>` '
+          '(found `$raw` on `${element.name}`).',
+          element: element,
+        );
+      }
+      return RestReturnTypeModel(
+        rawTypeName: raw,
+        isFuture: isFuture,
+        isRestResult: true,
+        isStreaming: true,
+        resultTypeName: 'Stream<List<int>>',
+      );
     }
 
     final isRestResult = _restResult.isAssignableFromType(type);

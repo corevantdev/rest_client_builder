@@ -6,6 +6,40 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## 1.3.3
+
+### New Features
+
+- **`@HTTP` — Generic Custom HTTP Verb Annotation** (`lib/src/annotations/http/http_annotations.dart`):  
+  Enables non-standard HTTP verbs beyond the built-in shortcuts (`@GET`, `@POST`, etc.).  
+  Supports WebDAV (`REPORT`, `COPY`, `MOVE`, `LOCK`), CDN (`PURGE`), and any custom protocol verb.  
+  The method string is automatically uppercased.  
+  ```dart
+  @HTTP('REPORT', '/analytics')
+  Future<RestResult<Map<String, dynamic>>> report(@Body() Map<String, dynamic> q);
+  ```
+
+- **`@Streaming` — Streaming Response Annotation** (`lib/src/annotations/http/streaming_annotation.dart`):  
+  Marks a method to receive the HTTP response body as a raw `Stream<List<int>>` without loading it into RAM.  
+  Backed by Dio's `ResponseType.stream` under the hood.  
+  Return type must be `Future<RestResult<Stream<List<int>>>>`.  
+  Compile-time error if combined with `@Multipart` or `@FormUrlEncoded`.  
+  ```dart
+  @Streaming()
+  @GET('/files/{id}')
+  Future<RestResult<Stream<List<int>>>> downloadFile(@Path('id') String id);
+  ```
+
+- **`RestResponseMapper.mapStream()`**: New static mapper that extracts a `Stream<List<int>>` from a Dio `ResponseBody` (for real HTTP calls) or falls back to wrapping `bodyBytes`/`bodyString` into a single-chunk stream (for test clients and mocks).
+
+### Improvements
+
+- Visitor and writer updated to propagate `isStreaming` through the full code generation pipeline.
+- Validator now rejects `@Streaming` methods that also declare `@Multipart` or `@FormUrlEncoded`.
+- API docs table in generated files now shows `[streaming]` flag next to streamed endpoints.
+
+---
+
 ## 1.3.2
 
 - **Repository Migration:** Updated all repository, homepage, and package documentation references to the new Git repository `https://github.com/corevantdev/rest_client_builder`.

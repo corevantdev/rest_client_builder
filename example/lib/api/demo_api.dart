@@ -77,4 +77,33 @@ abstract class DemoApi {
   Future<RestResult<User>> secure(
     @HeaderMap() Map<String, String> headers,
   );
+
+  // ── New: Custom verb via @HTTP ────────────────────────────────────────────
+
+  /// Sends a WebDAV REPORT request to query collection analytics.
+  ///
+  /// Demonstrates `@HTTP` with a non-standard HTTP verb.
+  @HTTP('REPORT', '/users/analytics')
+  Future<RestResult<Map<String, dynamic>>> reportAnalytics(
+    @Body() Map<String, dynamic> query,
+  );
+
+  /// Purges a cached resource using a custom CDN verb.
+  @HTTP('PURGE', '/cache/{key}')
+  Future<RestResult<void>> purgeCache(@Path('key') String key);
+
+  // ── New: Streaming download via @Streaming ────────────────────────────────
+
+  /// Downloads a file as a raw byte stream without buffering it in RAM.
+  ///
+  /// Demonstrates `@Streaming` — the response body is returned as a
+  /// `Stream<List<int>>` so you can pipe it directly to disk or a sink.
+  @Streaming()
+  @GET('/files/{id}')
+  Future<RestResult<Stream<List<int>>>> downloadFile(
+    @Path('id') String id, {
+    @Query('format') String? format,
+    @Cancel() CancelToken? cancelToken,
+    RestProgressCallback? onReceiveProgress,
+  });
 }

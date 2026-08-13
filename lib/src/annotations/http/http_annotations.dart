@@ -65,3 +65,28 @@ class OPTIONS extends HttpMethod {
   /// Creates an OPTIONS annotation.
   const OPTIONS([String path = '']) : super(HttpMethodNames.options, path);
 }
+
+/// Generic HTTP method annotation for custom or non-standard verbs.
+///
+/// Use this when the standard verb shortcuts (`@GET`, `@POST`, etc.) do not
+/// cover your protocol — e.g. WebDAV (`COPY`, `MOVE`, `LOCK`, `REPORT`) or
+/// custom proxy verbs (`PURGE`, `SEARCH`).
+///
+/// ```dart
+/// @HTTP('REPORT', '/analytics')
+/// Future<RestResult<Analytics>> getReport();
+///
+/// @HTTP('PURGE', '/cache/{key}')
+/// Future<RestResult<void>> purge(@Path() String key);
+/// ```
+///
+/// The method string is automatically uppercased.
+@Target({TargetKind.method})
+class HTTP extends HttpMethod {
+  /// Creates a custom HTTP verb annotation.
+  ///
+  /// [method] — Any HTTP verb string (case-insensitive; stored as uppercase).
+  /// [path]   — Optional relative path appended to the base URL.
+  const HTTP(String method, [String path = ''])
+      : super(method, path);
+}

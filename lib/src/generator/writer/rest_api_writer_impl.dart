@@ -95,6 +95,7 @@ extension ${api.name}ClientExtension on RestClient {
           final flags = <String>[
             if (method.isMultipart) 'multipart',
             if (method.isFormUrlEncoded) 'form',
+            if (method.isStreaming) 'streaming',
           ];
           final suffix = flags.isEmpty ? '' : ' [${flags.join(', ')}]';
           return '/// | `${method.httpMethod}` | `${_escape(method.path)}` | '
@@ -151,6 +152,9 @@ $entries
     } else if (method.isFormUrlEncoded) {
       lines.add('///');
       lines.add('/// Content-Type: `application/x-www-form-urlencoded`');
+    } else if (method.isStreaming) {
+      lines.add('///');
+      lines.add('/// Response: raw `Stream<List<int>>` (byte stream — not buffered).');
     }
 
     final pathParams = method.parameters
@@ -306,10 +310,14 @@ $entries
         retryMaxAttempts == null &&
         retryDelayMs == null &&
         retryStatusCodes == null &&
-        enableLog == null) {
+        enableLog == null &&
+        !method.isStreaming) {
       return 'const <String, Object?>{}';
     }
     final buffer = StringBuffer('<String, Object?>{');
+    if (method.isStreaming) {
+      buffer.write("'responseType': 'stream',");
+    }
     if (use.isNotEmpty) {
       final names = use.map((name) => "'${_escape(name)}'").join(', ');
       buffer.write('RestInterceptorExtras.useInterceptors: <String>[$names],');
@@ -578,6 +586,9 @@ const bodyType = RestBodyType.json;
 
   String _mapExpression(RestMethodModel method) {
     final returnType = method.returnType;
+    if (returnType.isStreaming) {
+      return 'RestResponseMapper.mapStream(raw)';
+    }
     if (returnType.isVoid) {
       return 'RestResponseMapper.mapVoid(raw)';
     }

@@ -131,7 +131,31 @@ class DefaultRestApiValidator implements RestApiValidator {
         ValidationIssue(
           message:
               'Method `${method.name}` cannot be both `@Multipart` and '
-              '`@FormUrlEncoded`.',
+              '`@FormUrlEncoded` at the same time.',
+          severity: ValidationSeverity.error,
+          elementName: elementName,
+        ),
+      );
+    }
+
+    if (method.isStreaming && method.isMultipart) {
+      issues.add(
+        ValidationIssue(
+          message:
+              '`@Streaming` method `${method.name}` cannot also be `@Multipart`. '
+              'Streaming is for downloads; use a separate upload method.',
+          severity: ValidationSeverity.error,
+          elementName: elementName,
+        ),
+      );
+    }
+
+    if (method.isStreaming && method.isFormUrlEncoded) {
+      issues.add(
+        ValidationIssue(
+          message:
+              '`@Streaming` method `${method.name}` cannot also be `@FormUrlEncoded`. '
+              'Streaming is for downloads; use a separate upload method.',
           severity: ValidationSeverity.error,
           elementName: elementName,
         ),

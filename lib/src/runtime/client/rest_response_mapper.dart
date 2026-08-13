@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../core/error/rest_error.dart';
 import '../../core/result/rest_result.dart';
 import '../client/rest_client.dart';
@@ -150,6 +152,71 @@ abstract final class RestResponseMapper {
     T Function(Object? data) decode,
   ) {
     return _map(result, decode);
+  }
+
+  /// Maps a streaming response body into a raw `Stream<List<int>>`.
+  ///
+  /// When the Dio engine is configured with `ResponseType.stream`, the
+  /// response [RestResponse.data] is a Dio `ResponseBody` which exposes a
+  /// `Stream<Uint8List>` via its `.stream` property.
+  ///
+  /// For non-Dio clients (e.g. test mocks), any existing [RestResponse.bodyBytes]
+  /// or [RestResponse.bodyString] are wrapped in a single-item stream so the
+  /// API contract is satisfied without network I/O.
+  static RestResult<Stream<List<int>>> mapStream(
+    RestResult<RestResponse> result,
+  ) {
+    return result.when(
+      success: (response) {
+        if (!response.isSuccess) {
+          return Failure<Stream<List<int>>>(
+            RestError.http(
+              'HTTP \${response.statusCode}',
+              statusCode: response.statusCode,
+              details: {
+                'body': response.data,
+                'bodyString': response.bodyString,
+              },
+            ),
+          );
+        }
+        try {
+          final data = response.data;
+          // Dio ResponseType.stream: data is ResponseBody with a .stream field.
+          // We access it dynamically to avoid a hard Dio import here.
+          if (data != null) {
+            // Try to get a Stream<List<int>> from Dio ResponseBody.stream.
+            try {
+              // ignore: avoid_dynamic_calls
+              final dynamic maybeStream = (data as dynamic).stream;
+              if (maybeStream is Stream) {
+                final typed = maybeStream.cast<List<int>>();
+                return Success<Stream<List<int>>>(typed);
+              }
+            } catch (_) {
+              // data is not a ResponseBody — fall through to byte/string fallback.
+            }
+          }
+          // Fallback: wrap existing bytes or string into a single-chunk stream.
+          final bytes = response.bodyBytes;
+          if (bytes != null && bytes.isNotEmpty) {
+            return Success<Stream<List<int>>>(Stream.value(bytes));
+          }
+          final bodyStr = response.bodyString;
+          if (bodyStr != null && bodyStr.isNotEmpty) {
+            final encoded = bodyStr.codeUnits;
+            return Success<Stream<List<int>>>(Stream.value(encoded));
+          }
+          // Empty response — return an empty stream.
+          return Success<Stream<List<int>>>(const Stream.empty());
+        } on RestError catch (error) {
+          return Failure<Stream<List<int>>>(error);
+        } on Object catch (error, stackTrace) {
+          return Failure<Stream<List<int>>>(RestError.fromException(error, stackTrace));
+        }
+      },
+      failure: (error) => Failure<Stream<List<int>>>(error),
+    );
   }
 
   static RestResult<T> _map<T>(
