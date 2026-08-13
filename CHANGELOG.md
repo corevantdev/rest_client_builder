@@ -6,6 +6,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## 1.3.2
+
+- **Repository Migration:** Updated all repository, homepage, and package documentation references to the new Git repository `https://github.com/corevantdev/rest_client_builder`.
+- **Unit Test Stability:** Updated outdated unit test assertions to match the new clean abstract class and generated `UserApiImpl` pattern.
+
+## 1.3.1
+
+- **Minor Refinements:** Internal documentation updates and dependency package adjustments.
+
 ## 1.3.0
 
 - **Zero-Setup DX Top-Level Getters:** Automatically generates clean top-level getters (`demoApi`, `productApi`, `paymentApi`) so controllers can invoke APIs directly with zero `RestClient` management or dependency injection boilerplate.

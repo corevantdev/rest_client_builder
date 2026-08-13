@@ -1,4 +1,4 @@
-# RestApiBuilder
+# RestClientBuilder
 
 A Clean Architecture code-generation framework for typed REST API clients in **Dart** and **Flutter** — powered by annotations and `build_runner`.
 
@@ -27,7 +27,7 @@ Declare endpoints once. Call generated type-safe clients directly (`userService.
 ```yaml
 # pubspec.yaml
 dependencies:
-  rest_client_builder: ^1.3.0
+  rest_client_builder: ^1.3.2
 
 dev_dependencies:
   build_runner: ^2.4.15
@@ -131,7 +131,7 @@ class UserController extends GetxController {
 
 ## Multi-Service & Microservice Architecture
 
-`rest_api_builder` supports multi-domain microservice architectures while managing client connections efficiently:
+`rest_client_builder` supports multi-domain microservice architectures while managing client connections efficiently:
 
 ### Option 1: Single Shared Client (Default — Recommended for Main API)
 Omit `configuration` to share the primary application connection pool across endpoints.

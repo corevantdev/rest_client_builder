@@ -209,9 +209,9 @@ void main() {
       );
 
       final source = writer.writeApi(api);
-      expect(source, contains('class _UserApi implements UserApi'));
+      expect(source, contains('class UserApiImpl implements UserApi'));
       expect(source, contains('UserApi createUserApi('));
-      expect(source, contains('_UserApi(client, baseUrl: baseUrl, headers: headers)'));
+      expect(source, contains('UserApiImpl(client: client, baseUrl: baseUrl, headers: headers)'));
       expect(source, contains("method: 'GET'"));
       expect(source, contains('resolveRestPath'));
       expect(source, contains("if (expand != null) 'expand'"));
