@@ -1,6 +1,5 @@
 import 'package:rest_client_builder/rest_client_builder.dart';
 
-export '../rest_client_builder/models/user.g.dart';
 
 enum Role { admin, member, guest }
 

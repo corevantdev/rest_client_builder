@@ -78,6 +78,7 @@ void main() async {
   await _demoFoldPattern(apiService);
   await _demoMultipartCancelProgress(apiService);
   await _demoLoginExcludesAuth(apiService);
+  await _demoSseAndResilientQueue(apiService);
   await _demoOption3PaymentApi();
   await _demoProductApi();
 
@@ -181,6 +182,22 @@ Future<void> _demoMultipartCancelProgress(DemoApi api) async {
 Future<void> _demoLoginExcludesAuth(DemoApi api) async {
   final result = await api.login('ada@example.com', 'secret');
   result.getOrThrow();
+}
+
+Future<void> _demoSseAndResilientQueue(DemoApi api) async {
+  final stream = api.watchEvents();
+  expectTrue(stream != null);
+
+  final user = User(
+    id: '99',
+    name: 'Offline User',
+    role: Role.member,
+    createdAt: DateTime.utc(2024, 1, 1),
+    tags: const ['offline'],
+    scores: const {'score': 100},
+  );
+  final resilientUser = await api.createOfflineUser(user);
+  expectTrue(resilientUser.getOrThrow().name == 'Ada');
 }
 
 Future<void> _demoOption3PaymentApi() async {

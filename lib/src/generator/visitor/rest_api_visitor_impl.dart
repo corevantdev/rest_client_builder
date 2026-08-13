@@ -86,21 +86,17 @@ class DefaultRestApiVisitor implements RestApiVisitor {
     HTTP,
     inPackage: 'rest_client_builder',
   );
-  static const _streaming = TypeChecker.typeNamed(
-    Streaming,
-    inPackage: 'rest_client_builder',
+  static const _streaming = TypeChecker.fromUrl(
+    'package:rest_client_builder/rest_client_builder.dart#Streaming',
   );
-  static const _sse = TypeChecker.typeNamed(
-    SSE,
-    inPackage: 'rest_client_builder',
+  static const _sse = TypeChecker.fromUrl(
+    'package:rest_client_builder/rest_client_builder.dart#SSE',
   );
-  static const _offlineQueue = TypeChecker.typeNamed(
-    OfflineQueue,
-    inPackage: 'rest_client_builder',
+  static const _offlineQueue = TypeChecker.fromUrl(
+    'package:rest_client_builder/rest_client_builder.dart#OfflineQueue',
   );
-  static const _resilientQueue = TypeChecker.typeNamed(
-    ResilientQueue,
-    inPackage: 'rest_client_builder',
+  static const _resilientQueue = TypeChecker.fromUrl(
+    'package:rest_client_builder/rest_client_builder.dart#ResilientQueue',
   );
 
   static const _multipart = TypeChecker.typeNamed(
@@ -239,7 +235,8 @@ class DefaultRestApiVisitor implements RestApiVisitor {
     final http = _readHttpMethod(element);
     if (http == null) {
       // Check for @SSE — which needs an HTTP method annotation too.
-      if (_sse.hasAnnotationOf(element, throwOnUnresolved: false)) {
+      if (_sse.hasAnnotationOf(element, throwOnUnresolved: false) ||
+          _hasAnnotationNamed(element, 'SSE')) {
         throw InvalidGenerationSourceError(
           '@SSE on `${element.name}` requires a verb annotation '
           '(e.g. @GET, @HTTP).',
@@ -250,24 +247,34 @@ class DefaultRestApiVisitor implements RestApiVisitor {
     }
 
     final isStreaming = _streaming.hasAnnotationOf(
-      element,
-      throwOnUnresolved: false,
-    );
+          element,
+          throwOnUnresolved: false,
+        ) ||
+        _hasAnnotationNamed(element, 'Streaming');
 
-    final isSse = _sse.hasAnnotationOf(element, throwOnUnresolved: false);
+    final isSse = _sse.hasAnnotationOf(
+          element,
+          throwOnUnresolved: false,
+        ) ||
+        _hasAnnotationNamed(element, 'SSE');
 
     // Read @ResilientQueue / @OfflineQueue fields.
-    final offlineAnnotation = _resilientQueue.firstAnnotationOf(
+    final offlineAnnotationObj = _resilientQueue.firstAnnotationOf(
           element,
           throwOnUnresolved: false,
         ) ??
         _offlineQueue.firstAnnotationOf(
           element,
           throwOnUnresolved: false,
-        );
-    final isOfflineQueue = offlineAnnotation != null;
-    final offlineReader =
-        offlineAnnotation != null ? ConstantReader(offlineAnnotation) : null;
+        ) ??
+        _findAnnotationNamed(element, 'ResilientQueue')
+            ?.computeConstantValue() ??
+        _findAnnotationNamed(element, 'OfflineQueue')
+            ?.computeConstantValue();
+    final isOfflineQueue = offlineAnnotationObj != null;
+    final offlineReader = offlineAnnotationObj != null
+        ? ConstantReader(offlineAnnotationObj)
+        : null;
     final offlineQueueRemoveWhen = offlineReader
             ?.peek('removeWhen')
             ?.listValue
@@ -800,7 +807,45 @@ class DefaultRestApiVisitor implements RestApiVisitor {
     if (annotation == null) return null;
     final value = ConstantReader(annotation).peek(field);
     if (value == null || value.isNull) return null;
-    return [for (final item in value.listValue) item.toIntValue()!];
+    return value.listValue
+        .map((element) => element.toIntValue() ?? 0)
+        .toList(growable: false);
+  }
+
+  bool _hasAnnotationNamed(Element element, String name) {
+    // ignore: avoid_dynamic_calls
+    final dynamic metaList =
+        (element.metadata as dynamic).annotations ?? element.metadata;
+    for (final dynamic annotation in (metaList as Iterable<dynamic>)) {
+      final source = annotation.toSource() as String;
+      if (source == '@$name' || source.startsWith('@$name(')) {
+        return true;
+      }
+      final el = annotation.element;
+      final enclosingName = el is ConstructorElement
+          ? (el as dynamic).enclosingElement?.name
+          : el?.name;
+      if (enclosingName == name) return true;
+    }
+    return false;
+  }
+
+  ElementAnnotation? _findAnnotationNamed(Element element, String name) {
+    // ignore: avoid_dynamic_calls
+    final dynamic metaList =
+        (element.metadata as dynamic).annotations ?? element.metadata;
+    for (final dynamic annotation in (metaList as Iterable<dynamic>)) {
+      final source = annotation.toSource() as String;
+      if (source == '@$name' || source.startsWith('@$name(')) {
+        return annotation as ElementAnnotation;
+      }
+      final el = annotation.element;
+      final enclosingName = el is ConstructorElement
+          ? (el as dynamic).enclosingElement?.name
+          : el?.name;
+      if (enclosingName == name) return annotation as ElementAnnotation;
+    }
+    return null;
   }
 
   String _joinPaths(String prefix, String path) {

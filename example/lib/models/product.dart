@@ -1,6 +1,5 @@
 import 'package:rest_client_builder/rest_client_builder.dart';
 
-export '../rest_client_builder/models/product.g.dart';
 
 @RestModel()
 class Product {

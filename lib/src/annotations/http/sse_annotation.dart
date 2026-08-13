@@ -1,3 +1,5 @@
+import 'package:meta/meta_meta.dart';
+
 /// Marks an abstract REST API method as a Server-Sent Events (SSE) endpoint.
 ///
 /// Methods annotated with `@SSE` must return `Stream<SSEEvent>` directly
@@ -17,6 +19,7 @@
 /// [reconnectMs] is a hint embedded in the request extras. The actual
 /// reconnect logic must be implemented in a `RestInterceptor` or by the
 /// caller — the package does not manage reconnect loops automatically.
+@Target({TargetKind.method})
 class SSE {
   /// Creates an SSE annotation.
   const SSE({this.reconnectMs = 3000});

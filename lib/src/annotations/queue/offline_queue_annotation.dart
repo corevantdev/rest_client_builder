@@ -1,3 +1,5 @@
+import 'package:meta/meta_meta.dart';
+
 /// Marks an abstract REST API method for automatic resilient request queueing.
 ///
 /// When a request fails due to network loss, connection timeout, specific status codes
@@ -34,6 +36,7 @@
 ///
 /// `@ResilientQueue` is meaningless on streaming connections; the generator
 /// rejects that combination at build time.
+@Target({TargetKind.method})
 class ResilientQueue {
   /// Creates a resilient queue annotation.
   const ResilientQueue({

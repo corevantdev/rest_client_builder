@@ -70,7 +70,7 @@ class DefaultRestApiValidator implements RestApiValidator {
   ) {
     final elementName = '${api.name}.${method.name}';
 
-    if (!method.returnType.isRestResult) {
+    if (!method.isSse && !method.returnType.isRestResult) {
       issues.add(
         ValidationIssue(
           message:
