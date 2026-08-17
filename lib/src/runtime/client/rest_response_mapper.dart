@@ -217,7 +217,7 @@ abstract final class RestResponseMapper {
             return Success<Stream<List<int>>>(Stream.value(encoded));
           }
           // Empty response — return an empty stream.
-          return Success<Stream<List<int>>>(const Stream.empty());
+          return const Success<Stream<List<int>>>(Stream.empty());
         } on RestError catch (error) {
           return Failure<Stream<List<int>>>(error);
         } on Object catch (error, stackTrace) {

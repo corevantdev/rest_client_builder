@@ -9,8 +9,11 @@ import 'rest_model_generator.dart';
 /// A custom builder that redirects generated files into `lib/rest_client_builder/`.
 class RestClientOutputBuilder implements Builder {
   final Builder _delegate;
+
+  /// The generated extension to append to target file paths.
   final String generatedExtension;
 
+  /// Creates a [RestClientOutputBuilder] delegating to [generator].
   RestClientOutputBuilder(Generator generator, {required this.generatedExtension})
       : _delegate = LibraryBuilder(generator, generatedExtension: generatedExtension);
 

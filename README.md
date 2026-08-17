@@ -13,7 +13,7 @@ Declare endpoints once. Call generated type-safe clients directly (`userService.
 - **Zero-Boilerplate Invocation**: Call APIs directly via top-level getters (`userService.getUser('1')`) with **zero** `RestClient` or `Dio` setup in your controllers.
 - **Built-In Connection Pooling**: Automatic HTTP Keep-Alive and TCP socket reuse for maximum speed.
 - **Microservices & Multi-Domain**: Support for multiple microservices via `@RestApi(baseUrl: ...)` or dedicated isolated configuration via `@RestApi(configuration: ...)`.
-- **Functional Result Type**: Strongly-typed `RestResult<T>` with `.fold()`, `.when()`, `.map()`, and `.getOrThrow()` — perfect for GetX, Bloc, and Provider.
+- **Functional Result Type**: Strongly-typed `RestResult<T>` with `.fold()`, `.when()`, `.map()`, `.flatMap()`, `.mapAsync()`, `.flatMapAsync()`, and `.getOrThrow()` — perfect for GetX, Bloc, and Provider.
 - **`@RestModel` JSON Codegen**: Declarative `fromJson` / `toJson` generation with `JsonKey` support.
 - **Memory-Safe Multipart**: `RestPart.fromBytes` / `RestPart.fromBase64` (web & Flutter friendly, no `dart:io` `File` dependency).
 - **Cancel & Progress Callbacks**: Built-in `CancelToken`, `onSendProgress`, and `onReceiveProgress`.
@@ -21,6 +21,8 @@ Declare endpoints once. Call generated type-safe clients directly (`userService.
 - **Response Caching**: In-memory `@Cache` annotation with configurable TTL per method or class.
 - **Custom HTTP Verbs (`@HTTP`)**: Beyond `@GET`/`@POST` — support WebDAV (`REPORT`, `COPY`, `LOCK`), CDN (`PURGE`), and any custom protocol verb.
 - **Streaming Downloads (`@Streaming`)**: Receive large files/video as a raw `Stream<List<int>>` without buffering into RAM.
+- **Server-Sent Events (`@SSE`)**: Subscribe to live HTTP event streams with zero boilerplate.
+- **Resilient Request Queue**: Automatically save and replay failed requests when network drops, with `@ResilientQueue` / `@OfflineQueue`.
 - **Compile-Time Safety**: Fails at `build_runner` build time on invalid route syntax, GET+Body, missing path placeholders, or invalid multipart settings.
 
 ---
@@ -30,7 +32,7 @@ Declare endpoints once. Call generated type-safe clients directly (`userService.
 ```yaml
 # pubspec.yaml
 dependencies:
-  rest_client_builder: ^1.3.4
+  rest_client_builder: ^1.3.5
 
 dev_dependencies:
   build_runner: ^2.4.15
@@ -61,17 +63,59 @@ All generated files land centrally under `lib/rest_client_builder/`, preserving 
 
 ---
 
-## Quick Start (4 Steps)
+## Quick Start (5 Steps)
 
-### Step 1: Define your Model
+### Step 1: Define your Configuration
+
+Create a class annotated with `@RestConfiguration()` that implements `RestApiGlobalConfiguration`.
+
+```dart
+// lib/core/app_config.dart
+import 'package:rest_client_builder/rest_client_builder.dart';
+
+@RestConfiguration()
+class AppRestConfiguration implements RestApiGlobalConfiguration {
+  @override
+  final String baseUrl = 'https://api.example.com';
+
+  @override
+  final Map<String, String> headers = const {
+    'Accept': 'application/json',
+  };
+
+  @override
+  final int? retryMaxAttempts = 3;
+
+  @override
+  final int? retryDelayMs = 200;
+
+  @override
+  final List<int>? retryStatusCodes = const [502, 503];
+
+  @override
+  final int? connectTimeoutMs = 10000;
+
+  @override
+  final int? receiveTimeoutMs = 30000;
+
+  @override
+  final int? sendTimeoutMs = 15000;
+
+  @override
+  final bool? enableLog = true;
+
+  @override
+  final List<RestInterceptor> interceptors = const [];
+}
+```
+
+### Step 2: Define your Model
 
 Annotate a standard class with `@RestModel()`. The generator produces all serialization code automatically.
 
 ```dart
 // lib/models/user.dart
 import 'package:rest_client_builder/rest_client_builder.dart';
-
-export '../rest_client_builder/models/user.g.dart';
 
 @RestModel()
 class User {
@@ -84,7 +128,7 @@ class User {
 }
 ```
 
-### Step 2: Define your API
+### Step 3: Define your API
 
 Write a pure abstract class annotated with `@RestApi()`. Define your endpoints using `@GET`, `@POST`, `@PUT`, `@DELETE`, etc.
 
@@ -106,13 +150,13 @@ abstract class UserService {
 }
 ```
 
-### Step 3: Run the Code Generator
+### Step 4: Run the Code Generator
 
 ```bash
 dart run build_runner build --delete-conflicting-outputs
 ```
 
-### Step 4: Call Endpoints in your Controllers
+### Step 5: Call Endpoints in your Controllers
 
 Call your API using the generated top-level getter (`userService`). **No `RestClient` creation or dependency injection setup required!**
 
@@ -159,6 +203,44 @@ abstract class ProductApi {
 For services requiring isolated security policies, custom timeouts, or 0 retries (e.g. Payments), annotate with a dedicated `@RestConfiguration`:
 
 ```dart
+// lib/core/payment_config.dart
+@RestConfiguration()
+class PaymentRestConfiguration implements RestApiGlobalConfiguration {
+  @override
+  final String baseUrl = 'https://payment-service.com';
+
+  @override
+  final Map<String, String> headers = const {
+    'Accept': 'application/json',
+    'X-Payment-Version': 'v2',
+  };
+
+  @override
+  final int? retryMaxAttempts = 1; // Never retry payment calls
+
+  @override
+  final int? retryDelayMs = 0;
+
+  @override
+  final List<int>? retryStatusCodes = const [];
+
+  @override
+  final int? connectTimeoutMs = 5000;
+
+  @override
+  final int? receiveTimeoutMs = 15000;
+
+  @override
+  final int? sendTimeoutMs = 15000;
+
+  @override
+  final bool? enableLog = true;
+
+  @override
+  final List<RestInterceptor> interceptors = const [];
+}
+
+// lib/api/payment_api.dart
 @RestApi(
   baseUrl: 'https://payment-service.com',
   configuration: PaymentRestConfiguration,
@@ -168,6 +250,8 @@ abstract class PaymentApi {
   Future<RestResult<ChargeResponse>> charge(@Body() ChargeRequest request);
 }
 ```
+
+Calling `paymentApi.charge(...)` automatically routes through `PaymentRestConfiguration`'s isolated connection pool — **zero client setup required**.
 
 ---
 
@@ -187,6 +271,7 @@ abstract class ProductApi {
 
 - **Method level or Class level**: Annotate an entire `@RestApi` class or individual method.
 - **Zero Network Overhead**: Hits in-memory `RestResponseCache` instantly without sending HTTP requests.
+- **Default TTL**: 300,000 ms (5 minutes) when `durationMs` is omitted.
 - **Manual Clear**: Call `RestResponseCache.clear()` to invalidate all cached data (e.g. after user logout).
 
 ---
@@ -198,26 +283,36 @@ Endpoints return `Future<RestResult<T>>` instead of throwing raw exceptions. Mat
 ```dart
 final result = await userService.getUser('1');
 
-// 1. .fold() — handle failure and success branches:
+// 1. .fold() — positional: failure first, then success (like Either):
 final userName = result.fold(
   (error) => 'Guest',
   (user)  => user.name,
 );
 
-// 2. .when() — named callback dispatch:
+// 2. .when() — named callback dispatch (reads more clearly):
 result.when(
   success: (user)  => print('Found: ${user.name}'),
   failure: (error) => print('Failed: ${error.message}'),
 );
 
-// 3. .map() / .flatMap() — transform payloads:
+// 3. .map() — synchronously transform the success value:
 final greeting = result.map((user) => 'Hello, ${user.name}!');
 
-// 4. Quick property access:
+// 4. .flatMap() — chain another RestResult-returning operation:
+final order = result.flatMap((user) => orderRepo.findByUser(user.id));
+
+// 5. .mapAsync() / .flatMapAsync() — async transform / chain:
+final profile = await result.mapAsync((user) => profileRepo.get(user.id));
+final order   = await result.flatMapAsync((user) => orderRepo.submit(user));
+
+// 6. .getOrElse() — return success value, or a default on failure:
+final user = result.getOrElse(() => User.guest());
+
+// 7. Quick property access:
 final userOrNull  = result.dataOrNull;
 final errorOrNull = result.errorOrNull;
 
-// 5. Throw explicit RestError when expected:
+// 8. Throw explicit RestError when expected:
 final user = result.getOrThrow();
 ```
 
@@ -229,16 +324,22 @@ Do not pass static tokens into base configurations: they become stale upon login
 
 ```dart
 class AuthInterceptor implements RestInterceptor {
+  AuthInterceptor({Future<String?> Function()? tokenReader})
+      : _tokenReader = tokenReader;
+
+  final Future<String?> Function()? _tokenReader;
+
   @override
   Future<RestRequest> onRequest(RestRequest request) async {
-    final token = await secureStorage.read(key: 'access_token');
-    if (token == null || token.isEmpty || request is! BasicRestRequest) {
-      return request;
+    final token = _tokenReader == null ? null : await _tokenReader!();
+    if (token == null || token.isEmpty) return request;
+    if (request is BasicRestRequest) {
+      return request.copyWith(headers: {
+        ...request.headers,
+        'Authorization': 'Bearer $token',
+      });
     }
-    return request.copyWith(headers: {
-      ...request.headers,
-      'Authorization': 'Bearer $token',
-    });
+    return request;
   }
 
   @override
@@ -325,9 +426,9 @@ final result = await fileApi.downloadFile('report-2024.pdf',
     print('${(received / total * 100).toStringAsFixed(1)}%'),
 );
 
-result.fold(
-  onFailure: (error) => print('Download failed: ${error.message}'),
-  onSuccess: (stream) async {
+result.when(
+  failure: (error) => print('Download failed: ${error.message}'),
+  success: (stream) async {
     final sink = File('report.pdf').openWrite();
     await stream.pipe(sink);
     await sink.close();
@@ -370,6 +471,7 @@ notificationApi.watchEvents().listen(
 
 - **Returns `Stream<SSEEvent>` directly** (no `Future` or `RestResult` wrapper).
 - **HTML §9.2 Spec Compliant**: Parses `data:`, `event:`, `id:`, `retry:`, ignores comment lines (`:`), and concatenates multi-line data.
+- **`reconnectMs`**: Pass a suggested reconnect delay hint via `@SSE(reconnectMs: 5000)`. Actual reconnect logic must be implemented in an interceptor or by the caller.
 
 ---
 
@@ -392,21 +494,22 @@ abstract class OrderApi {
 
 > **Note:** `@OfflineQueue` is supported as a backward-compatible alias for `@ResilientQueue`.
 
-
 ### Setup & Flushed Replay
 
 ```dart
 final offlineQueue = RestRequestQueue();
 
-// Register interceptor on client config:
-final clientConfig = BasicRestClientConfig(
-  interceptors: [
-    RestQueueInterceptor(
+// Build a client with the queue interceptor attached:
+final client = RestClientBuilder()
+    .baseUrl('https://api.example.com')
+    .addInterceptor(RestQueueInterceptor(
       queue: offlineQueue,
       onQueued: (request, item) => print('Saved offline: ${request.path}'),
-    ),
-  ],
-);
+    ))
+    .build();
+
+// Set it as the global default (or inject per-API):
+RestApiClientRegistry.defaultClient = client;
 
 // Inspect or observe queued non-synced requests in UI:
 print('Pending offline syncs: ${offlineQueue.length}');
@@ -462,6 +565,26 @@ final result = await userService.uploadAvatar(
 
 ---
 
+## Fluent Client Builder (`RestClientBuilder`)
+
+For advanced scenarios where you need a manually constructed `RestClient` (e.g. testing, isolated pools), use the fluent `RestClientBuilder`:
+
+```dart
+final client = RestClientBuilder()
+    .baseUrl('https://api.example.com')
+    .defaultHeaders({'Accept': 'application/json'})
+    .timeouts(connectTimeoutMs: 10000, receiveTimeoutMs: 30000)
+    .retry(maxAttempts: 3, delayMs: 500, statusCodes: [502, 503])
+    .logging(enable: true)
+    .addInterceptor(AuthInterceptor())
+    .build();
+
+// Optionally set as the process-wide default:
+RestApiClientRegistry.defaultClient = client;
+```
+
+---
+
 ## Project Structure
 
 ```
@@ -470,11 +593,35 @@ rest_client_builder/
 │   ├── rest_client_builder.dart      # Public barrel import
 │   └── src/
 │       ├── annotations/           # @RestApi, @RestModel, HTTP verb annotations
-│       ├── core/                  # RestResult, RestError, utilities
-│       ├── runtime/               # Dio execution runtime, interceptors, multipart
+│       │   ├── api/               # @RestApi, @UseInterceptor, @ExcludeInterceptor, @Tag
+│       │   ├── cache/             # @Cache
+│       │   ├── configuration/     # @RestConfiguration, @BaseUrl, @Headers, @Retry, timeouts
+│       │   ├── form/              # @FormUrlEncoded, @Field, @FieldMap
+│       │   ├── http/              # @GET @POST @PUT @PATCH @DELETE @HEAD @OPTIONS @HTTP @SSE @Streaming
+│       │   ├── models/            # @RestModel
+│       │   ├── multipart/         # @Multipart, @Part
+│       │   ├── parameters/        # @Path, @Query, @QueryMap, @Body, @Header, @HeaderMap, @Url, @Cancel
+│       │   └── queue/             # @ResilientQueue / @OfflineQueue
+│       ├── core/                  # RestResult, RestError, SSEEvent, utilities
+│       ├── runtime/               # Dio execution runtime, interceptors, multipart, cache, queue
 │       └── generator/             # Code generation logic & validators
 ├── example/                       # Production-style consumer example app
 └── test/                          # Unit & generator tests
+```
+
+### Generated Output Layout
+
+Sources under `lib/` are mirrored under `lib/rest_client_builder/` with builder-specific suffixes:
+
+```
+lib/
+├── models/user.dart                          ← your @RestModel source
+├── api/user_service.dart                     ← your @RestApi source
+├── core/app_config.dart                      ← your @RestConfiguration source
+└── rest_client_builder/
+    ├── models/user.g.dart                    ← rest_model output
+    ├── api/user_service.rest.g.dart          ← rest_api output
+    └── core/app_config.rest.config.g.dart    ← rest_configuration output
 ```
 
 ---

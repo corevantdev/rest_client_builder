@@ -87,6 +87,5 @@ class HTTP extends HttpMethod {
   ///
   /// [method] — Any HTTP verb string (case-insensitive; stored as uppercase).
   /// [path]   — Optional relative path appended to the base URL.
-  const HTTP(String method, [String path = ''])
-      : super(method, path);
+  const HTTP(super.method, [super.path = '']);
 }
