@@ -32,7 +32,7 @@ Declare endpoints once. Call generated type-safe clients directly (`userService.
 ```yaml
 # pubspec.yaml
 dependencies:
-  rest_client_builder: ^1.3.5
+  rest_client_builder: ^1.3.6
 
 dev_dependencies:
   build_runner: ^2.4.15

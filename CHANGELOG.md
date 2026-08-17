@@ -6,6 +6,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## 1.3.6
+
+- **Documentation & Example Improvements**:
+  - Refined README examples with accurate import/export usage.
+  - Corrected streaming download result handling using `.when()`.
+  - Added documentation for missing `RestResult` combinators (`.flatMap()`, `.mapAsync()`, `.flatMapAsync()`, `.getOrElse()`).
+  - Added full working examples for `RestClientBuilder` and queue management.
+- **Code Quality**:
+  - Resolved analyzer lints and removed unused generator imports.
+  - Added missing documentation comments on public generator builder members.
+
+---
+
 ## 1.3.5
 
 - **Renamed to `@ResilientQueue` (`@OfflineQueue` preserved as alias)**:
