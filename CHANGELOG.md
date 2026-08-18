@@ -6,6 +6,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## 1.3.7
+
+- **Restored compatibility with Flutter SDK `meta` 1.17.0 pin**:
+  - Relaxed the `meta` dependency constraint from `^1.19.0` to `>=1.17.0 <2.0.0`.
+  - Flutter stable SDKs (e.g. Flutter 3.38.x) pin `meta` to `1.17.0` via `flutter`/`flutter_test`. The previous tight constraint caused `pub get` to fail for consumers even though the package only uses `@Target`/`TargetKind` from `package:meta/meta_meta.dart` — both of which are fully available since `meta 1.15.0`.
+  - No API changes. No `dependency_overrides` required by consumers.
+
+---
+
 ## 1.3.6
 
 - **Documentation & Example Improvements**:
