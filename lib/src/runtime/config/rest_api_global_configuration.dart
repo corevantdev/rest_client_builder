@@ -18,19 +18,19 @@ abstract interface class RestApiGlobalConfiguration {
   int? get retryMaxAttempts;
 
   /// Delay between retry attempts.
-  int? get retryDelayMs;
+  Duration? get retryDelay;
 
   /// Status codes that should trigger a retry.
   List<int>? get retryStatusCodes;
 
-  /// Connection timeout in milliseconds.
-  int? get connectTimeoutMs;
+  /// Connection timeout.
+  Duration? get connectTimeout;
 
-  /// Receive timeout in milliseconds.
-  int? get receiveTimeoutMs;
+  /// Receive timeout.
+  Duration? get receiveTimeout;
 
-  /// Send timeout in milliseconds.
-  int? get sendTimeoutMs;
+  /// Send timeout.
+  Duration? get sendTimeout;
 
   /// Whether to enable logging.
   bool? get enableLog;
@@ -49,12 +49,12 @@ extension RestApiGlobalConfigurationClientFactory
   RestGlobalConfig get restClientConfig => RestGlobalConfig(
         baseUrl: baseUrl,
         defaultHeaders: headers,
-        connectTimeoutMs: connectTimeoutMs,
-        receiveTimeoutMs: receiveTimeoutMs,
-        sendTimeoutMs: sendTimeoutMs,
+        connectTimeout: connectTimeout,
+        receiveTimeout: receiveTimeout,
+        sendTimeout: sendTimeout,
         enableLog: enableLog,
         retryMaxAttempts: retryMaxAttempts,
-        retryDelayMs: retryDelayMs,
+        retryDelay: retryDelay,
         retryStatusCodes: retryStatusCodes,
         interceptors: List<RestInterceptor>.unmodifiable(interceptors),
       );

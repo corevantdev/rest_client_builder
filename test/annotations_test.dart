@@ -8,23 +8,23 @@ void main() {
       const baseUrl = BaseUrl('https://api.example.com');
       const headers = Headers({'Accept': 'application/json'});
       const interceptors = GlobalInterceptors([Object]);
-      const retry = Retry(5, 250, [500]);
+      const retry = Retry(5, Duration(milliseconds: 250), [500]);
       const log = EnableLog(false);
-      const connect = ConnectTimeout(1000);
-      const receive = ReceiveTimeout(2000);
-      const send = SendTimeout(3000);
+      const connect = ConnectTimeout(Duration(seconds: 1));
+      const receive = ReceiveTimeout(Duration(seconds: 2));
+      const send = SendTimeout(Duration(seconds: 3));
 
       expect(config.name, 'default');
       expect(baseUrl.value, 'https://api.example.com');
       expect(headers.value['Accept'], 'application/json');
       expect(interceptors.interceptors, [Object]);
       expect(retry.maxAttempts, 5);
-      expect(retry.delayMs, 250);
+      expect(retry.delay, const Duration(milliseconds: 250));
       expect(retry.retryStatusCodes, [500]);
       expect(log.enabled, isFalse);
-      expect(connect.milliseconds, 1000);
-      expect(receive.milliseconds, 2000);
-      expect(send.milliseconds, 3000);
+      expect(connect.duration, const Duration(seconds: 1));
+      expect(receive.duration, const Duration(seconds: 2));
+      expect(send.duration, const Duration(seconds: 3));
     });
   });
 
@@ -63,10 +63,10 @@ void main() {
       expect(const GET().path, isEmpty);
     });
 
-    test('SSE annotation constructor retains reconnectMs', () {
-      const sse = SSE(reconnectMs: 5000);
-      expect(sse.reconnectMs, 5000);
-      expect(const SSE().reconnectMs, 3000);
+    test('SSE annotation constructor retains reconnectDelay', () {
+      const sse = SSE(reconnectDelay: Duration(seconds: 5));
+      expect(sse.reconnectDelay, const Duration(seconds: 5));
+      expect(const SSE().reconnectDelay, const Duration(seconds: 3));
     });
 
     test('ResilientQueue annotation constructor retains defaults and custom options', () {

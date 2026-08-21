@@ -43,12 +43,12 @@ class BasicRestClientConfig implements RestClientConfig {
   const BasicRestClientConfig({
     this.baseUrl = '',
     this.defaultHeaders = const <String, String>{},
-    this.connectTimeoutMs = 10000,
-    this.receiveTimeoutMs = 30000,
-    this.sendTimeoutMs = 30000,
+    this.connectTimeout = const Duration(seconds: 10),
+    this.receiveTimeout = const Duration(seconds: 30),
+    this.sendTimeout = const Duration(seconds: 30),
     this.enableLog = false,
     this.retryMaxAttempts = 1,
-    this.retryDelayMs = 0,
+    this.retryDelay = Duration.zero,
     this.retryStatusCodes,
     this.interceptors = const <RestInterceptor>[],
     this.logger = const NoOpRestLogger(),
@@ -61,13 +61,13 @@ class BasicRestClientConfig implements RestClientConfig {
   final Map<String, String> defaultHeaders;
 
   @override
-  final int connectTimeoutMs;
+  final Duration connectTimeout;
 
   @override
-  final int receiveTimeoutMs;
+  final Duration receiveTimeout;
 
   @override
-  final int sendTimeoutMs;
+  final Duration sendTimeout;
 
   @override
   final bool enableLog;
@@ -76,7 +76,7 @@ class BasicRestClientConfig implements RestClientConfig {
   final int retryMaxAttempts;
 
   @override
-  final int retryDelayMs;
+  final Duration retryDelay;
 
   @override
   final List<int>? retryStatusCodes;

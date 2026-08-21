@@ -24,9 +24,9 @@ abstract final class RestResponseCache {
     return entry.response;
   }
 
-  /// Stores [response] under [key] for [durationMs] milliseconds.
-  static void put(String key, RestResponse response, int durationMs) {
-    final expiresAt = DateTime.now().add(Duration(milliseconds: durationMs));
+  /// Stores [response] under [key] for [duration].
+  static void put(String key, RestResponse response, Duration duration) {
+    final expiresAt = DateTime.now().add(duration);
     _store[key] = _CacheEntry(response, expiresAt);
   }
 

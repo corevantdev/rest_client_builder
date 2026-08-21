@@ -10,13 +10,13 @@ class _StubConfig implements RestClientConfig {
   Map<String, String> get defaultHeaders => const {};
 
   @override
-  int get connectTimeoutMs => 1000;
+  Duration get connectTimeout => const Duration(seconds: 1);
 
   @override
-  int get receiveTimeoutMs => 1000;
+  Duration get receiveTimeout => const Duration(seconds: 1);
 
   @override
-  int get sendTimeoutMs => 1000;
+  Duration get sendTimeout => const Duration(seconds: 1);
 
   @override
   bool get enableLog => false;
@@ -25,7 +25,7 @@ class _StubConfig implements RestClientConfig {
   int get retryMaxAttempts => 1;
 
   @override
-  int get retryDelayMs => 0;
+  Duration get retryDelay => Duration.zero;
 
   @override
   List<int>? get retryStatusCodes => null;
@@ -95,13 +95,13 @@ class _FakeRequest implements RestRequest {
   RestMultipartBody? get multipartBody => null;
 
   @override
-  int? get connectTimeoutMs => null;
+  Duration? get connectTimeout => null;
 
   @override
-  int? get receiveTimeoutMs => null;
+  Duration? get receiveTimeout => null;
 
   @override
-  int? get sendTimeoutMs => null;
+  Duration? get sendTimeout => null;
 
   @override
   CancelToken? get cancelToken => null;

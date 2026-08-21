@@ -4,7 +4,7 @@ abstract final class RestExecutionExtras {
   static const retryMaxAttempts = 'rest.retryMaxAttempts';
 
   /// Extra key for a retry-delay override.
-  static const retryDelayMs = 'rest.retryDelayMs';
+  static const retryDelay = 'rest.retryDelay';
 
   /// Extra key for retryable HTTP status codes.
   static const retryStatusCodes = 'rest.retryStatusCodes';
@@ -18,7 +18,7 @@ class RestExecutionOptions {
   /// Creates resolved execution options.
   const RestExecutionOptions({
     this.retryMaxAttempts,
-    this.retryDelayMs,
+    this.retryDelay,
     this.retryStatusCodes,
     this.enableLog,
   });
@@ -27,7 +27,7 @@ class RestExecutionOptions {
   final int? retryMaxAttempts;
 
   /// Retry-delay override.
-  final int? retryDelayMs;
+  final Duration? retryDelay;
 
   /// Retryable status-code override.
   final List<int>? retryStatusCodes;
@@ -39,9 +39,10 @@ class RestExecutionOptions {
 /// Reads execution options from request extras.
 RestExecutionOptions readRestExecutionOptions(Map<String, Object?> extras) {
   final codes = extras[RestExecutionExtras.retryStatusCodes];
+  final delayMs = extras[RestExecutionExtras.retryDelay] as int?;
   return RestExecutionOptions(
     retryMaxAttempts: extras[RestExecutionExtras.retryMaxAttempts] as int?,
-    retryDelayMs: extras[RestExecutionExtras.retryDelayMs] as int?,
+    retryDelay: delayMs != null ? Duration(milliseconds: delayMs) : null,
     retryStatusCodes: codes is List ? codes.cast<int>() : null,
     enableLog: extras[RestExecutionExtras.enableLog] as bool?,
   );

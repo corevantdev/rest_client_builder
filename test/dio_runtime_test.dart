@@ -45,9 +45,9 @@ void main() {
         config: const BasicRestClientConfig(
           baseUrl: 'https://api.example.com',
           defaultHeaders: {'Accept': 'application/json'},
-          connectTimeoutMs: 1000,
-          receiveTimeoutMs: 1000,
-          sendTimeoutMs: 1000,
+          connectTimeout: Duration(seconds: 1),
+          receiveTimeout: Duration(seconds: 1),
+          sendTimeout: Duration(seconds: 1),
         ),
         dio: dio,
       );
@@ -110,7 +110,7 @@ void main() {
         config: const BasicRestClientConfig(
           baseUrl: 'https://api.example.com',
           retryMaxAttempts: 3,
-          retryDelayMs: 1,
+          retryDelay: Duration(milliseconds: 1),
           retryStatusCodes: [503],
         ),
         dio: dio,

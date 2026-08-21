@@ -16,15 +16,15 @@ import 'package:meta/meta_meta.dart';
 /// The runtime uses Dio's `ResponseType.stream` under the hood and pipes the
 /// raw bytes through the SSE text-frame parser.
 ///
-/// [reconnectMs] is a hint embedded in the request extras. The actual
+/// [reconnectDelay] is a hint embedded in the request extras. The actual
 /// reconnect logic must be implemented in a `RestInterceptor` or by the
 /// caller — the package does not manage reconnect loops automatically.
 @Target({TargetKind.method})
 class SSE {
   /// Creates an SSE annotation.
-  const SSE({this.reconnectMs = 3000});
+  const SSE({this.reconnectDelay = const Duration(seconds: 3)});
 
-  /// Suggested reconnect delay in milliseconds (for client retry logic).
-  final int reconnectMs;
+  /// Suggested reconnect delay (for client retry logic).
+  final Duration reconnectDelay;
 }
 

@@ -195,23 +195,23 @@ class DefaultRestApiVisitor implements RestApiVisitor {
       excludeInterceptors: _readInterceptorTypes(element, _excludeInterceptor),
       enableLog: _readBoolAnnotation(element, _enableLog, 'enabled'),
       retryMaxAttempts: _readIntAnnotation(element, _retry, 'maxAttempts'),
-      retryDelayMs: _readIntAnnotation(element, _retry, 'delayMs'),
+      retryDelay: _readDurationAsMs(element, _retry, 'delay'),
       retryStatusCodes: _readIntListAnnotation(
         element,
         _retry,
         'retryStatusCodes',
       ),
-      connectTimeoutMs: _readIntAnnotation(
+      connectTimeout: _readDurationAsMs(
         element,
         _connectTimeout,
-        'milliseconds',
+        'duration',
       ),
-      receiveTimeoutMs: _readIntAnnotation(
+      receiveTimeout: _readDurationAsMs(
         element,
         _receiveTimeout,
-        'milliseconds',
+        'duration',
       ),
-      sendTimeoutMs: _readIntAnnotation(element, _sendTimeout, 'milliseconds'),
+      sendTimeout: _readDurationAsMs(element, _sendTimeout, 'duration'),
       configurationName: configName,
     );
   }
@@ -327,25 +327,25 @@ class DefaultRestApiVisitor implements RestApiVisitor {
       excludeInterceptors: _readInterceptorTypes(element, _excludeInterceptor),
       enableLog: _readBoolAnnotation(element, _enableLog, 'enabled'),
       retryMaxAttempts: _readIntAnnotation(element, _retry, 'maxAttempts'),
-      retryDelayMs: _readIntAnnotation(element, _retry, 'delayMs'),
+      retryDelay: _readDurationAsMs(element, _retry, 'delay'),
       retryStatusCodes: _readIntListAnnotation(
         element,
         _retry,
         'retryStatusCodes',
       ),
-      connectTimeoutMs: _readIntAnnotation(
+      connectTimeout: _readDurationAsMs(
         element,
         _connectTimeout,
-        'milliseconds',
+        'duration',
       ),
-      receiveTimeoutMs: _readIntAnnotation(
+      receiveTimeout: _readDurationAsMs(
         element,
         _receiveTimeout,
-        'milliseconds',
+        'duration',
       ),
-      sendTimeoutMs: _readIntAnnotation(element, _sendTimeout, 'milliseconds'),
-      cacheDurationMs: _readIntAnnotation(element, _cache, 'durationMs') ??
-          _readIntAnnotation(classElement, _cache, 'durationMs'),
+      sendTimeout: _readDurationAsMs(element, _sendTimeout, 'duration'),
+      cacheDuration: _readDurationAsMs(element, _cache, 'duration') ??
+          _readDurationAsMs(classElement, _cache, 'duration'),
     );
   }
 
@@ -776,6 +776,25 @@ class DefaultRestApiVisitor implements RestApiVisitor {
     return annotation == null
         ? null
         : ConstantReader(annotation).read(field).intValue;
+  }
+
+  /// Reads a `Duration` field from an annotation and returns its value
+  /// in milliseconds. Returns `null` when the annotation is absent.
+  int? _readDurationAsMs(
+    Element element,
+    TypeChecker checker,
+    String field,
+  ) {
+    final annotation = checker.firstAnnotationOf(
+      element,
+      throwOnUnresolved: false,
+    );
+    if (annotation == null) return null;
+    final durationObj = ConstantReader(annotation).read(field).objectValue;
+    // Duration internally stores a single `int _duration` field in microseconds.
+    final microseconds = durationObj.getField('_duration')?.toIntValue();
+    if (microseconds == null) return null;
+    return microseconds ~/ 1000;
   }
 
   bool? _readBoolAnnotation(

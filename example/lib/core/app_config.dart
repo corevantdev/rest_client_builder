@@ -25,15 +25,15 @@ class AppRestConfiguration implements RestApiGlobalConfiguration {
   @override
   final int? retryMaxAttempts = 3;
   @override
-  final int? retryDelayMs = 200;
+  final Duration? retryDelay = const Duration(milliseconds: 200);
   @override
   final List<int>? retryStatusCodes = const [502, 503];
   @override
-  final int? connectTimeoutMs = 10000;
+  final Duration? connectTimeout = const Duration(seconds: 10);
   @override
-  final int? receiveTimeoutMs = 30000;
+  final Duration? receiveTimeout = const Duration(seconds: 30);
   @override
-  final int? sendTimeoutMs = 15000;
+  final Duration? sendTimeout = const Duration(seconds: 15);
   @override
   final bool? enableLog = true;
   @override

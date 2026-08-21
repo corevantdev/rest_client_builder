@@ -77,15 +77,15 @@ class Retry {
   /// Creates a retry annotation.
   const Retry([
     this.maxAttempts = 3,
-    this.delayMs = 1000,
+    this.delay = const Duration(seconds: 1),
     this.retryStatusCodes,
   ]);
 
   /// Maximum attempts including the initial request.
   final int maxAttempts;
 
-  /// Delay between attempts in milliseconds.
-  final int delayMs;
+  /// Delay between retry attempts.
+  final Duration delay;
 
   /// Optional status codes that should trigger a retry.
   final List<int>? retryStatusCodes;
@@ -108,7 +108,7 @@ class EnableLog {
   final bool enabled;
 }
 
-/// Declares the connection timeout in milliseconds.
+/// Declares the connection timeout.
 @Target({
   TargetKind.classType,
   TargetKind.method,
@@ -117,13 +117,13 @@ class EnableLog {
 })
 class ConnectTimeout {
   /// Creates a connect-timeout annotation.
-  const ConnectTimeout(this.milliseconds);
+  const ConnectTimeout(this.duration);
 
-  /// Timeout duration in milliseconds.
-  final int milliseconds;
+  /// Timeout duration.
+  final Duration duration;
 }
 
-/// Declares the receive timeout in milliseconds.
+/// Declares the receive timeout.
 @Target({
   TargetKind.classType,
   TargetKind.method,
@@ -132,13 +132,13 @@ class ConnectTimeout {
 })
 class ReceiveTimeout {
   /// Creates a receive-timeout annotation.
-  const ReceiveTimeout(this.milliseconds);
+  const ReceiveTimeout(this.duration);
 
-  /// Timeout duration in milliseconds.
-  final int milliseconds;
+  /// Timeout duration.
+  final Duration duration;
 }
 
-/// Declares the send timeout in milliseconds.
+/// Declares the send timeout.
 @Target({
   TargetKind.classType,
   TargetKind.method,
@@ -147,8 +147,8 @@ class ReceiveTimeout {
 })
 class SendTimeout {
   /// Creates a send-timeout annotation.
-  const SendTimeout(this.milliseconds);
+  const SendTimeout(this.duration);
 
-  /// Timeout duration in milliseconds.
-  final int milliseconds;
+  /// Timeout duration.
+  final Duration duration;
 }

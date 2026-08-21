@@ -49,12 +49,12 @@ extension ${name}RestClientFactory on $name {
   RestGlobalConfig get restClientConfig => RestGlobalConfig(
         baseUrl: baseUrl,
         defaultHeaders: headers,
-        connectTimeoutMs: connectTimeoutMs,
-        receiveTimeoutMs: receiveTimeoutMs,
-        sendTimeoutMs: sendTimeoutMs,
+        connectTimeout: connectTimeout,
+        receiveTimeout: receiveTimeout,
+        sendTimeout: sendTimeout,
         enableLog: enableLog,
         retryMaxAttempts: retryMaxAttempts,
-        retryDelayMs: retryDelayMs,
+        retryDelay: retryDelay,
         retryStatusCodes: retryStatusCodes,
         interceptors: List<RestInterceptor>.unmodifiable(interceptors),
       );

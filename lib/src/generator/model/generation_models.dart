@@ -183,12 +183,12 @@ class RestMethodModel {
     this.enqueueOnStatusCodes = const <int>[],
     this.enableLog,
     this.retryMaxAttempts,
-    this.retryDelayMs,
+    this.retryDelay,
     this.retryStatusCodes,
-    this.connectTimeoutMs,
-    this.receiveTimeoutMs,
-    this.sendTimeoutMs,
-    this.cacheDurationMs,
+    this.connectTimeout,
+    this.receiveTimeout,
+    this.sendTimeout,
+    this.cacheDuration,
     this.useInterceptors = const <String>[],
     this.excludeInterceptors = const <String>[],
   });
@@ -253,23 +253,23 @@ class RestMethodModel {
   /// Optional method-level retry override.
   final int? retryMaxAttempts;
 
-  /// Method-level retry delay override.
-  final int? retryDelayMs;
+  /// Method-level retry delay override (milliseconds for code generation).
+  final int? retryDelay;
 
   /// Method-level retry status-code override.
   final List<int>? retryStatusCodes;
 
-  /// Optional method-level timeouts.
-  final int? connectTimeoutMs;
+  /// Optional method-level connect timeout (milliseconds for code generation).
+  final int? connectTimeout;
 
-  /// Optional method-level receive timeout.
-  final int? receiveTimeoutMs;
+  /// Optional method-level receive timeout (milliseconds for code generation).
+  final int? receiveTimeout;
 
-  /// Optional method-level send timeout.
-  final int? sendTimeoutMs;
+  /// Optional method-level send timeout (milliseconds for code generation).
+  final int? sendTimeout;
 
-  /// Optional cache TTL in milliseconds (@Cache).
-  final int? cacheDurationMs;
+  /// Optional cache TTL in milliseconds for code generation (@Cache).
+  final int? cacheDuration;
 
   /// Interceptor type names from `@UseInterceptor`.
   final List<String> useInterceptors;
@@ -291,11 +291,11 @@ class RestApiClassModel {
     this.excludeInterceptors = const <String>[],
     this.enableLog,
     this.retryMaxAttempts,
-    this.retryDelayMs,
+    this.retryDelay,
     this.retryStatusCodes,
-    this.connectTimeoutMs,
-    this.receiveTimeoutMs,
-    this.sendTimeoutMs,
+    this.connectTimeout,
+    this.receiveTimeout,
+    this.sendTimeout,
     this.configurationName,
   });
 
@@ -326,20 +326,20 @@ class RestApiClassModel {
   /// Retry settings.
   final int? retryMaxAttempts;
 
-  /// Retry delay in milliseconds.
-  final int? retryDelayMs;
+  /// Retry delay (milliseconds for code generation).
+  final int? retryDelay;
 
   /// Retry status codes.
   final List<int>? retryStatusCodes;
 
-  /// Timeouts in milliseconds.
-  final int? connectTimeoutMs;
+  /// Connect timeout (milliseconds for code generation).
+  final int? connectTimeout;
 
-  /// Receive timeout in milliseconds.
-  final int? receiveTimeoutMs;
+  /// Receive timeout (milliseconds for code generation).
+  final int? receiveTimeout;
 
-  /// Send timeout in milliseconds.
-  final int? sendTimeoutMs;
+  /// Send timeout (milliseconds for code generation).
+  final int? sendTimeout;
 
   /// Optional `@RestConfiguration` name.
   final String? configurationName;

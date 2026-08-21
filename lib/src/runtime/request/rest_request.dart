@@ -33,14 +33,14 @@ abstract interface class RestRequest {
   /// Multipart payload when [bodyType] is [RestBodyType.multipart].
   RestMultipartBody? get multipartBody;
 
-  /// Optional connect timeout override in milliseconds.
-  int? get connectTimeoutMs;
+  /// Optional connect timeout override.
+  Duration? get connectTimeout;
 
-  /// Optional receive timeout override in milliseconds.
-  int? get receiveTimeoutMs;
+  /// Optional receive timeout override.
+  Duration? get receiveTimeout;
 
-  /// Optional send timeout override in milliseconds.
-  int? get sendTimeoutMs;
+  /// Optional send timeout override.
+  Duration? get sendTimeout;
 
   /// Optional cancellation token for this call.
   CancelToken? get cancelToken;

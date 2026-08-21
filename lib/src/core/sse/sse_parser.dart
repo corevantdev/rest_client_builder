@@ -38,7 +38,7 @@ abstract final class SseParser {
       final dataStr = data.join('\n');
       final event0 = event.isNotEmpty ? event.last : null;
       final id0 = id.isNotEmpty ? id.last : null;
-      final retry0 = retry.isNotEmpty ? retry.last : null;
+      final retry0 = retry.isNotEmpty ? Duration(milliseconds: retry.last) : null;
       controller.add(SSEEvent(id: id0, event: event0, data: dataStr, retry: retry0));
       data.clear();
       event.clear();

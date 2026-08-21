@@ -30,9 +30,8 @@ class SSEEvent {
   /// Event payload. Multiple `data:` lines are concatenated with `\n`.
   final String data;
 
-  /// Reconnect timeout hint in milliseconds (`retry:` field). `null` if not
-  /// present.
-  final int? retry;
+  /// Reconnect timeout hint (`retry:` field). `null` if not present.
+  final Duration? retry;
 
   @override
   String toString() =>

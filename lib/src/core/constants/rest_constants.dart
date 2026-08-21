@@ -19,8 +19,8 @@ abstract final class RestConstants {
   /// UTF-8 charset token.
   static const String charsetUtf8 = 'utf-8';
 
-  /// Default connect/receive timeout hint in milliseconds (for adapters).
-  static const int defaultTimeoutMs = 30000;
+  /// Default connect/receive timeout hint (for adapters).
+  static const Duration defaultTimeout = Duration(seconds: 30);
 
   /// Empty JSON object literal.
   static const String emptyJsonObject = '{}';

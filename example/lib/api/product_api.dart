@@ -13,6 +13,6 @@ abstract class ProductApi {
   Future<RestResult<Product>> getProduct(@Path('id') String id);
 
   @GET('/products')
-  @Cache(durationMs: 60000)
+  @Cache(duration: Duration(minutes: 1))
   Future<RestResult<List<Product>>> listProducts();
 }

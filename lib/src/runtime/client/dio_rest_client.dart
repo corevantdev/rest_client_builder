@@ -96,9 +96,9 @@ class DioRestClient implements RestClient {
   Future<RestResult<RestResponse>> execute(RestRequest request) async {
     final prepared = _prepareRequest(request);
     final options = readRestExecutionOptions(prepared.extras);
-    final cacheDurationMs = prepared.extras['cacheDurationMs'] as int?;
+    final cacheDuration = prepared.extras['cacheDuration'] as Duration?;
 
-    if (cacheDurationMs != null && cacheDurationMs > 0) {
+    if (cacheDuration != null && cacheDuration > Duration.zero) {
       final cacheKey = '${prepared.method}:${prepared.url ?? prepared.path}';
       final cached = RestResponseCache.get(cacheKey);
       if (cached != null) {
@@ -129,9 +129,9 @@ class DioRestClient implements RestClient {
 
       if (result.isSuccess) {
         final response = result.dataOrNull!;
-        if (cacheDurationMs != null && cacheDurationMs > 0 && response.isSuccess) {
+        if (cacheDuration != null && cacheDuration > Duration.zero && response.isSuccess) {
           final cacheKey = '${prepared.method}:${prepared.url ?? prepared.path}';
-          RestResponseCache.put(cacheKey, response, cacheDurationMs);
+          RestResponseCache.put(cacheKey, response, cacheDuration);
         }
         final shouldRetry = !response.isSuccess &&
             attempt < maxAttempts &&
@@ -155,9 +155,9 @@ class DioRestClient implements RestClient {
         lastFailure = result;
       }
 
-      final retryDelayMs = options.retryDelayMs ?? config.retryDelayMs;
-      if (retryDelayMs > 0) {
-        await Future<void>.delayed(Duration(milliseconds: retryDelayMs));
+      final retryDelay = options.retryDelay ?? config.retryDelay;
+      if (retryDelay > Duration.zero) {
+        await Future<void>.delayed(retryDelay);
       }
     }
 
@@ -192,9 +192,9 @@ class DioRestClient implements RestClient {
         body: request.body,
         bodyType: request.bodyType,
         multipartBody: request.multipartBody,
-        connectTimeoutMs: request.connectTimeoutMs,
-        receiveTimeoutMs: request.receiveTimeoutMs,
-        sendTimeoutMs: request.sendTimeoutMs,
+        connectTimeout: request.connectTimeout,
+        receiveTimeout: request.receiveTimeout,
+        sendTimeout: request.sendTimeout,
         cancelToken: request.cancelToken,
         onSendProgress: request.onSendProgress,
         onReceiveProgress: request.onReceiveProgress,
@@ -254,9 +254,9 @@ class DioRestClient implements RestClient {
 
     _ensureContentType(headers, request.bodyType);
 
-    final connect = request.connectTimeoutMs ?? config.connectTimeoutMs;
-    final receive = request.receiveTimeoutMs ?? config.receiveTimeoutMs;
-    final send = request.sendTimeoutMs ?? config.sendTimeoutMs;
+    final connect = request.connectTimeout ?? config.connectTimeout;
+    final receive = request.receiveTimeout ?? config.receiveTimeout;
+    final send = request.sendTimeout ?? config.sendTimeout;
 
     final absoluteUrl = request.url ??
         (config.baseUrl.isEmpty
@@ -267,9 +267,9 @@ class DioRestClient implements RestClient {
       return request.copyWith(
         headers: headers,
         url: absoluteUrl,
-        connectTimeoutMs: connect,
-        receiveTimeoutMs: receive,
-        sendTimeoutMs: send,
+        connectTimeout: connect,
+        receiveTimeout: receive,
+        sendTimeout: send,
       );
     }
 
@@ -282,9 +282,9 @@ class DioRestClient implements RestClient {
       body: request.body,
       bodyType: request.bodyType,
       multipartBody: request.multipartBody,
-      connectTimeoutMs: connect,
-      receiveTimeoutMs: receive,
-      sendTimeoutMs: send,
+      connectTimeout: connect,
+      receiveTimeout: receive,
+      sendTimeout: send,
       cancelToken: request.cancelToken,
       onSendProgress: request.onSendProgress,
       onReceiveProgress: request.onReceiveProgress,
@@ -329,9 +329,9 @@ class DioRestClient implements RestClient {
   static void _configureDio(Dio dio, RestClientConfig config) {
     dio.options
       ..baseUrl = config.baseUrl
-      ..connectTimeout = Duration(milliseconds: config.connectTimeoutMs)
-      ..receiveTimeout = Duration(milliseconds: config.receiveTimeoutMs)
-      ..sendTimeout = Duration(milliseconds: config.sendTimeoutMs)
+      ..connectTimeout = config.connectTimeout
+      ..receiveTimeout = config.receiveTimeout
+      ..sendTimeout = config.sendTimeout
       ..validateStatus = (_) => true;
   }
 }

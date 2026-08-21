@@ -19,9 +19,9 @@ class BasicRestRequest implements RestRequest {
     this.body,
     this.bodyType = RestBodyType.none,
     this.multipartBody,
-    this.connectTimeoutMs,
-    this.receiveTimeoutMs,
-    this.sendTimeoutMs,
+    this.connectTimeout,
+    this.receiveTimeout,
+    this.sendTimeout,
     this.cancelToken,
     this.onSendProgress,
     this.onReceiveProgress,
@@ -53,13 +53,13 @@ class BasicRestRequest implements RestRequest {
   final RestMultipartBody? multipartBody;
 
   @override
-  final int? connectTimeoutMs;
+  final Duration? connectTimeout;
 
   @override
-  final int? receiveTimeoutMs;
+  final Duration? receiveTimeout;
 
   @override
-  final int? sendTimeoutMs;
+  final Duration? sendTimeout;
 
   @override
   final CancelToken? cancelToken;
@@ -86,9 +86,9 @@ class BasicRestRequest implements RestRequest {
     Object? body,
     RestBodyType? bodyType,
     RestMultipartBody? multipartBody,
-    int? connectTimeoutMs,
-    int? receiveTimeoutMs,
-    int? sendTimeoutMs,
+    Duration? connectTimeout,
+    Duration? receiveTimeout,
+    Duration? sendTimeout,
     CancelToken? cancelToken,
     RestProgressCallback? onSendProgress,
     RestProgressCallback? onReceiveProgress,
@@ -103,9 +103,9 @@ class BasicRestRequest implements RestRequest {
       body: body ?? this.body,
       bodyType: bodyType ?? this.bodyType,
       multipartBody: multipartBody ?? this.multipartBody,
-      connectTimeoutMs: connectTimeoutMs ?? this.connectTimeoutMs,
-      receiveTimeoutMs: receiveTimeoutMs ?? this.receiveTimeoutMs,
-      sendTimeoutMs: sendTimeoutMs ?? this.sendTimeoutMs,
+      connectTimeout: connectTimeout ?? this.connectTimeout,
+      receiveTimeout: receiveTimeout ?? this.receiveTimeout,
+      sendTimeout: sendTimeout ?? this.sendTimeout,
       cancelToken: cancelToken ?? this.cancelToken,
       onSendProgress: onSendProgress ?? this.onSendProgress,
       onReceiveProgress: onReceiveProgress ?? this.onReceiveProgress,

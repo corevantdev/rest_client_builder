@@ -251,13 +251,13 @@ $entries
       ..writeln('  bodyType: bodyType,')
       ..writeln('  multipartBody: multipartBody,')
       ..writeln(
-        '  connectTimeoutMs: ${_intOption(method.connectTimeoutMs, api.connectTimeoutMs)},',
+        '  connectTimeout: ${_durationOption(method.connectTimeout, api.connectTimeout)},',
       )
       ..writeln(
-        '  receiveTimeoutMs: ${_intOption(method.receiveTimeoutMs, api.receiveTimeoutMs)},',
+        '  receiveTimeout: ${_durationOption(method.receiveTimeout, api.receiveTimeout)},',
       )
       ..writeln(
-        '  sendTimeoutMs: ${_intOption(method.sendTimeoutMs, api.sendTimeoutMs)},',
+        '  sendTimeout: ${_durationOption(method.sendTimeout, api.sendTimeout)},',
       )
       ..writeln('  cancelToken: ${_cancelTokenExpr(method)},')
       ..writeln('  onSendProgress: ${_uploadProgressExpr(method)},')
@@ -352,13 +352,13 @@ $entries
       ...method.excludeInterceptors,
     }.toList(growable: false);
     final retryMaxAttempts = method.retryMaxAttempts ?? api.retryMaxAttempts;
-    final retryDelayMs = method.retryDelayMs ?? api.retryDelayMs;
+    final retryDelay = method.retryDelay ?? api.retryDelay;
     final retryStatusCodes = method.retryStatusCodes ?? api.retryStatusCodes;
     final enableLog = method.enableLog ?? api.enableLog;
     if (use.isEmpty &&
         exclude.isEmpty &&
         retryMaxAttempts == null &&
-        retryDelayMs == null &&
+        retryDelay == null &&
         retryStatusCodes == null &&
         enableLog == null &&
         !method.isStreaming &&
@@ -404,8 +404,8 @@ $entries
     if (retryMaxAttempts != null) {
       buffer.write('RestExecutionExtras.retryMaxAttempts: $retryMaxAttempts,');
     }
-    if (retryDelayMs != null) {
-      buffer.write('RestExecutionExtras.retryDelayMs: $retryDelayMs,');
+    if (retryDelay != null) {
+      buffer.write('RestExecutionExtras.retryDelay: $retryDelay,');
     }
     if (retryStatusCodes != null) {
       buffer.write(
@@ -415,15 +415,18 @@ $entries
     if (enableLog != null) {
       buffer.write('RestExecutionExtras.enableLog: $enableLog,');
     }
-    if (method.cacheDurationMs != null) {
-      buffer.write("'cacheDurationMs': ${method.cacheDurationMs},");
+    if (method.cacheDuration != null) {
+      buffer.write("'cacheDuration': Duration(milliseconds: ${method.cacheDuration}),");
     }
     buffer.write('}');
     return buffer.toString();
   }
 
-  String _intOption(int? methodValue, int? apiValue) =>
-      (methodValue ?? apiValue)?.toString() ?? 'null';
+  /// Emits a Duration literal or null for a timeout value.
+  String _durationOption(int? methodValue, int? apiValue) {
+    final ms = methodValue ?? apiValue;
+    return ms != null ? 'Duration(milliseconds: $ms)' : 'null';
+  }
 
   String _parameterList(RestMethodModel method) {
     final positional = method.parameters.where((p) => !p.isNamed).toList();

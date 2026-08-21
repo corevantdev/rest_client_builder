@@ -87,19 +87,19 @@ class AppRestConfiguration implements RestApiGlobalConfiguration {
   final int? retryMaxAttempts = 3;
 
   @override
-  final int? retryDelayMs = 200;
+  final Duration? retryDelay = const Duration(milliseconds: 200);
 
   @override
   final List<int>? retryStatusCodes = const [502, 503];
 
   @override
-  final int? connectTimeoutMs = 10000;
+  final Duration? connectTimeout = const Duration(seconds: 10);
 
   @override
-  final int? receiveTimeoutMs = 30000;
+  final Duration? receiveTimeout = const Duration(seconds: 30);
 
   @override
-  final int? sendTimeoutMs = 15000;
+  final Duration? sendTimeout = const Duration(seconds: 15);
 
   @override
   final bool? enableLog = true;
@@ -219,19 +219,19 @@ class PaymentRestConfiguration implements RestApiGlobalConfiguration {
   final int? retryMaxAttempts = 1; // Never retry payment calls
 
   @override
-  final int? retryDelayMs = 0;
+  final Duration? retryDelay = Duration.zero;
 
   @override
   final List<int>? retryStatusCodes = const [];
 
   @override
-  final int? connectTimeoutMs = 5000;
+  final Duration? connectTimeout = const Duration(seconds: 5);
 
   @override
-  final int? receiveTimeoutMs = 15000;
+  final Duration? receiveTimeout = const Duration(seconds: 15);
 
   @override
-  final int? sendTimeoutMs = 15000;
+  final Duration? sendTimeout = const Duration(seconds: 15);
 
   @override
   final bool? enableLog = true;
@@ -262,16 +262,16 @@ Eliminate unnecessary network requests for slow-changing APIs (e.g. products, ca
 ```dart
 @RestApi(baseUrl: 'https://product-service.com')
 abstract class ProductApi {
-  // Caches response in memory for 60 seconds (60,000 ms)
+  // Caches response in memory for 1 minute
   @GET('/products')
-  @Cache(durationMs: 60000)
+  @Cache(duration: Duration(minutes: 1))
   Future<RestResult<List<Product>>> listProducts();
 }
 ```
 
 - **Method level or Class level**: Annotate an entire `@RestApi` class or individual method.
 - **Zero Network Overhead**: Hits in-memory `RestResponseCache` instantly without sending HTTP requests.
-- **Default TTL**: 300,000 ms (5 minutes) when `durationMs` is omitted.
+- **Default TTL**: 5 minutes when `duration` is omitted.
 - **Manual Clear**: Call `RestResponseCache.clear()` to invalidate all cached data (e.g. after user logout).
 
 ---
@@ -471,7 +471,7 @@ notificationApi.watchEvents().listen(
 
 - **Returns `Stream<SSEEvent>` directly** (no `Future` or `RestResult` wrapper).
 - **HTML §9.2 Spec Compliant**: Parses `data:`, `event:`, `id:`, `retry:`, ignores comment lines (`:`), and concatenates multi-line data.
-- **`reconnectMs`**: Pass a suggested reconnect delay hint via `@SSE(reconnectMs: 5000)`. Actual reconnect logic must be implemented in an interceptor or by the caller.
+- **`reconnectDelay`**: Pass a suggested reconnect delay hint via `@SSE(reconnectDelay: Duration(seconds: 5))`. Actual reconnect logic must be implemented in an interceptor or by the caller.
 
 ---
 
@@ -573,8 +573,8 @@ For advanced scenarios where you need a manually constructed `RestClient` (e.g. 
 final client = RestClientBuilder()
     .baseUrl('https://api.example.com')
     .defaultHeaders({'Accept': 'application/json'})
-    .timeouts(connectTimeoutMs: 10000, receiveTimeoutMs: 30000)
-    .retry(maxAttempts: 3, delayMs: 500, statusCodes: [502, 503])
+    .timeouts(connectTimeout: Duration(seconds: 10), receiveTimeout: Duration(seconds: 30))
+    .retry(maxAttempts: 3, delay: Duration(milliseconds: 500), statusCodes: [502, 503])
     .logging(enable: true)
     .addInterceptor(AuthInterceptor())
     .build();

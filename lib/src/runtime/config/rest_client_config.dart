@@ -12,14 +12,14 @@ abstract interface class RestClientConfig {
   /// Default headers applied to every request.
   Map<String, String> get defaultHeaders;
 
-  /// Default connect timeout in milliseconds.
-  int get connectTimeoutMs;
+  /// Default connect timeout.
+  Duration get connectTimeout;
 
-  /// Default receive timeout in milliseconds.
-  int get receiveTimeoutMs;
+  /// Default receive timeout.
+  Duration get receiveTimeout;
 
-  /// Default send timeout in milliseconds.
-  int get sendTimeoutMs;
+  /// Default send timeout.
+  Duration get sendTimeout;
 
   /// Whether request/response logging is enabled.
   bool get enableLog;
@@ -27,8 +27,8 @@ abstract interface class RestClientConfig {
   /// Maximum attempts including the original request.
   int get retryMaxAttempts;
 
-  /// Delay between retries in milliseconds.
-  int get retryDelayMs;
+  /// Delay between retries.
+  Duration get retryDelay;
 
   /// Status codes that should trigger a retry, if any.
   List<int>? get retryStatusCodes;

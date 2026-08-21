@@ -8,12 +8,12 @@ import 'rest_client.dart';
 class RestClientBuilder {
   String? _baseUrl;
   Map<String, String>? _defaultHeaders;
-  int? _connectTimeoutMs;
-  int? _receiveTimeoutMs;
-  int? _sendTimeoutMs;
+  Duration? _connectTimeout;
+  Duration? _receiveTimeout;
+  Duration? _sendTimeout;
   bool? _enableLog;
   int? _retryMaxAttempts;
-  int? _retryDelayMs;
+  Duration? _retryDelay;
   List<int>? _retryStatusCodes;
   List<RestInterceptor>? _interceptors;
   RestLogger? _logger;
@@ -37,26 +37,26 @@ class RestClientBuilder {
     return this;
   }
 
-  /// Sets timeouts in milliseconds.
+  /// Sets timeouts.
   RestClientBuilder timeouts({
-    int? connectTimeoutMs,
-    int? receiveTimeoutMs,
-    int? sendTimeoutMs,
+    Duration? connectTimeout,
+    Duration? receiveTimeout,
+    Duration? sendTimeout,
   }) {
-    if (connectTimeoutMs != null) _connectTimeoutMs = connectTimeoutMs;
-    if (receiveTimeoutMs != null) _receiveTimeoutMs = receiveTimeoutMs;
-    if (sendTimeoutMs != null) _sendTimeoutMs = sendTimeoutMs;
+    if (connectTimeout != null) _connectTimeout = connectTimeout;
+    if (receiveTimeout != null) _receiveTimeout = receiveTimeout;
+    if (sendTimeout != null) _sendTimeout = sendTimeout;
     return this;
   }
 
   /// Configures automatic retries for failed requests.
   RestClientBuilder retry({
     required int maxAttempts,
-    int delayMs = 0,
+    Duration delay = Duration.zero,
     List<int>? statusCodes,
   }) {
     _retryMaxAttempts = maxAttempts;
-    _retryDelayMs = delayMs;
+    _retryDelay = delay;
     _retryStatusCodes = statusCodes;
     return this;
   }
@@ -86,12 +86,12 @@ class RestClientBuilder {
     final config = RestGlobalConfig(
       baseUrl: _baseUrl,
       defaultHeaders: _defaultHeaders,
-      connectTimeoutMs: _connectTimeoutMs,
-      receiveTimeoutMs: _receiveTimeoutMs,
-      sendTimeoutMs: _sendTimeoutMs,
+      connectTimeout: _connectTimeout,
+      receiveTimeout: _receiveTimeout,
+      sendTimeout: _sendTimeout,
       enableLog: _enableLog,
       retryMaxAttempts: _retryMaxAttempts,
-      retryDelayMs: _retryDelayMs,
+      retryDelay: _retryDelay,
       retryStatusCodes: _retryStatusCodes,
       interceptors: _interceptors,
       logger: _logger,

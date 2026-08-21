@@ -18,15 +18,15 @@ class PaymentRestConfiguration implements RestApiGlobalConfiguration {
   @override
   final int? retryMaxAttempts = 1; // 0 retries on payment calls
   @override
-  final int? retryDelayMs = 0;
+  final Duration? retryDelay = Duration.zero;
   @override
   final List<int>? retryStatusCodes = const [];
   @override
-  final int? connectTimeoutMs = 5000;
+  final Duration? connectTimeout = const Duration(seconds: 5);
   @override
-  final int? receiveTimeoutMs = 15000;
+  final Duration? receiveTimeout = const Duration(seconds: 15);
   @override
-  final int? sendTimeoutMs = 15000;
+  final Duration? sendTimeout = const Duration(seconds: 15);
   @override
   final bool? enableLog = true;
   @override

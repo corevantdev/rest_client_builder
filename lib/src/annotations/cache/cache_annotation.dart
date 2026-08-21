@@ -8,10 +8,10 @@ import 'package:meta/meta_meta.dart';
 class Cache {
   /// Creates a cache annotation.
   ///
-  /// [durationMs] specifies the cache TTL (Time-To-Live) in milliseconds.
-  /// Default is 300,000 ms (5 minutes).
-  const Cache({this.durationMs = 300000});
+  /// [duration] specifies the cache TTL (Time-To-Live).
+  /// Default is 5 minutes.
+  const Cache({this.duration = const Duration(minutes: 5)});
 
-  /// Cache duration in milliseconds.
-  final int durationMs;
+  /// Cache duration.
+  final Duration duration;
 }

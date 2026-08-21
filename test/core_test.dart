@@ -193,17 +193,17 @@ class _TestRestConfiguration implements RestApiGlobalConfiguration {
   @override
   final int? retryMaxAttempts = null;
   @override
-  final int? retryDelayMs = null;
+  final Duration? retryDelay = null;
   @override
   final List<int>? retryStatusCodes = null;
   @override
-  final int? connectTimeoutMs = null;
+  final Duration? connectTimeout = null;
   @override
-  final int? receiveTimeoutMs = null;
+  final Duration? receiveTimeout = null;
   @override
-  final int? sendTimeoutMs = null;
+  final Duration? sendTimeout = null;
   @override
   final bool? enableLog = false;
   @override
-  final List<Interceptor> interceptors = const [];
+  final List<RestInterceptor> interceptors = const [];
 }

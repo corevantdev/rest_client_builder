@@ -42,9 +42,9 @@ class DioRestHttpEngine implements RestHttpEngine {
     final options = Options(
       method: request.method,
       headers: request.headers,
-      connectTimeout: _duration(request.connectTimeoutMs),
-      receiveTimeout: _duration(request.receiveTimeoutMs),
-      sendTimeout: _duration(request.sendTimeoutMs),
+      connectTimeout: request.connectTimeout,
+      receiveTimeout: request.receiveTimeout,
+      sendTimeout: request.sendTimeout,
       // Deliver HTTP responses to the runtime; non-2xx become RestResult
       // failures via RestResponseMapper / call-site policy.
       validateStatus: (_) => true,
@@ -91,12 +91,7 @@ class DioRestHttpEngine implements RestHttpEngine {
     return Uri.parse(joinRestUrl(baseUrl, request.path));
   }
 
-  Duration? _duration(int? milliseconds) {
-    if (milliseconds == null) {
-      return null;
-    }
-    return Duration(milliseconds: milliseconds);
-  }
+
 
   String? _contentType(RestRequest request) {
     switch (request.bodyType) {
@@ -208,9 +203,9 @@ class DioRestHttpEngine implements RestHttpEngine {
                 body: request.body,
                 bodyType: request.bodyType,
                 multipartBody: request.multipartBody,
-                connectTimeoutMs: request.connectTimeoutMs,
-                receiveTimeoutMs: request.receiveTimeoutMs,
-                sendTimeoutMs: request.sendTimeoutMs,
+                connectTimeout: request.connectTimeout,
+                receiveTimeout: request.receiveTimeout,
+                sendTimeout: request.sendTimeout,
                 cancelToken: request.cancelToken,
                 onSendProgress: request.onSendProgress,
                 onReceiveProgress: request.onReceiveProgress,
@@ -248,9 +243,9 @@ class DioRestHttpEngine implements RestHttpEngine {
               body: request.body,
               bodyType: request.bodyType,
               multipartBody: request.multipartBody,
-              connectTimeoutMs: request.connectTimeoutMs,
-              receiveTimeoutMs: request.receiveTimeoutMs,
-              sendTimeoutMs: request.sendTimeoutMs,
+              connectTimeout: request.connectTimeout,
+              receiveTimeout: request.receiveTimeout,
+              sendTimeout: request.sendTimeout,
               cancelToken: request.cancelToken,
               onSendProgress: request.onSendProgress,
               onReceiveProgress: request.onReceiveProgress,
