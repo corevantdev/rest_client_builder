@@ -6,6 +6,29 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## 1.4.0
+
+- **Migrated from `int` Milliseconds to `Duration`**:
+  - Replaced all raw millisecond `int` fields with Dart's idiomatic `Duration` type across annotations, configuration, runtime interfaces, and builders.
+  - **Annotations**:
+    - `@ConnectTimeout(Duration(seconds: 10))` (was `@ConnectTimeout(10000)` with `milliseconds` property).
+    - `@ReceiveTimeout(Duration(seconds: 30))` (was `@ReceiveTimeout(30000)` with `milliseconds` property).
+    - `@SendTimeout(Duration(seconds: 15))` (was `@SendTimeout(15000)` with `milliseconds` property).
+    - `@Retry(3, Duration(milliseconds: 200))` (was `delayMs: int`).
+    - `@Cache(duration: Duration(minutes: 5))` (was `durationMs: int`).
+    - `@SSE(reconnectDelay: Duration(seconds: 3))` (was `reconnectMs: int`).
+  - **Configuration & Runtime Interfaces**:
+    - `RestClientConfig`: `connectTimeout`, `receiveTimeout`, `sendTimeout`, `retryDelay` are now `Duration`.
+    - `RestApiGlobalConfiguration`: `connectTimeout`, `receiveTimeout`, `sendTimeout`, `retryDelay` are now `Duration?`.
+    - `RestRequest` / `BasicRestRequest`: `connectTimeout`, `receiveTimeout`, `sendTimeout` are now `Duration?`.
+    - `RestClientBuilder`: `.timeouts(connectTimeout: ..., receiveTimeout: ..., sendTimeout: ...)` and `.retry(delay: ...)` now accept `Duration`.
+    - `RestResponseCache`: `put(key, response, Duration duration)` now accepts `Duration`.
+    - `SSEEvent`: `retry` field is now `Duration?` parsed automatically from the SSE wire format.
+  - **Generator**:
+    - Updated code generator to read `Duration` from annotations and emit clean `Duration` values into generated client code.
+
+---
+
 ## 1.3.7
 
 - **Restored compatibility with Flutter SDK `meta` 1.17.0 pin**:
