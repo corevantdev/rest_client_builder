@@ -49,12 +49,20 @@ class DefaultRestModelVisitor implements RestModelVisitor {
         _visitParameter(element, parameter),
     ];
 
+    final currentLibraryUri =
+        element.library.firstFragment.source.uri.toString();
+    final extraImports = <String>{};
+    for (final field in fields) {
+      _collectJsonTypeImports(field.jsonType, extraImports, currentLibraryUri);
+    }
+
     return RestModelClassModel(
       name: element.name ?? '',
       createFactory: reader.read('createFactory').boolValue,
       createToJson: reader.read('createToJson').boolValue,
       explicitToJson: reader.read('explicitToJson').boolValue,
       fields: fields,
+      extraImports: extraImports,
     );
   }
 
@@ -194,16 +202,49 @@ class DefaultRestModelVisitor implements RestModelVisitor {
 
     final element = type.element;
     if (element is EnumElement) {
-      return RestEnumJsonType(element.name ?? '');
+      final sourceUri = element.library.firstFragment.source.uri.toString();
+      return RestEnumJsonType(element.name ?? '', sourceUri: sourceUri);
     }
     if (element is ClassElement) {
-      return RestNestedJsonType(element.name ?? '');
+      final sourceUri = element.library.firstFragment.source.uri.toString();
+      return RestNestedJsonType(element.name ?? '', sourceUri: sourceUri);
     }
 
     throw InvalidGenerationSourceError(
       'Unsupported RestModel field type `${type.getDisplayString()}`.',
       element: host,
     );
+  }
+
+  void _collectJsonTypeImports(
+    RestJsonType type,
+    Set<String> imports,
+    String currentLibraryUri,
+  ) {
+    switch (type) {
+      case RestNestedJsonType(:final sourceUri):
+        if (sourceUri != null &&
+            sourceUri.isNotEmpty &&
+            sourceUri != currentLibraryUri &&
+            !sourceUri.startsWith('dart:') &&
+            !sourceUri.startsWith('package:rest_client_builder/')) {
+          imports.add(sourceUri);
+        }
+      case RestEnumJsonType(:final sourceUri):
+        if (sourceUri != null &&
+            sourceUri.isNotEmpty &&
+            sourceUri != currentLibraryUri &&
+            !sourceUri.startsWith('dart:') &&
+            !sourceUri.startsWith('package:rest_client_builder/')) {
+          imports.add(sourceUri);
+        }
+      case RestListJsonType(:final itemType):
+        _collectJsonTypeImports(itemType.type, imports, currentLibraryUri);
+      case RestMapJsonType(:final valueType):
+        _collectJsonTypeImports(valueType.type, imports, currentLibraryUri);
+      case RestPrimitiveJsonType() || RestDateTimeJsonType():
+        break;
+    }
   }
 
   bool _isDateTime(DartType type) {

@@ -354,6 +354,7 @@ class RestModelClassModel {
     this.createToJson = true,
     this.explicitToJson = true,
     this.fields = const <RestModelFieldModel>[],
+    this.extraImports = const <String>{},
   });
 
   /// Dart class name.
@@ -370,6 +371,12 @@ class RestModelClassModel {
 
   /// Constructor parameters / fields used for (de)serialization.
   final List<RestModelFieldModel> fields;
+
+  /// URIs of external libraries that must be imported in the generated file
+  /// so that cross-file `restXFromJson` helpers and `.toJson()` extensions
+  /// are in scope. Populated by the visitor; empty when all nested types live
+  /// in the same library.
+  final Set<String> extraImports;
 
   /// Fields that participate in JSON (not ignored).
   List<RestModelFieldModel> get serializableFields =>

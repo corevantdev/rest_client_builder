@@ -6,6 +6,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## 1.4.1
+
+- **Cross-File `@RestModel` Import Resolution**:
+  - Fixed an issue where `@RestModel` classes referencing nested models or enums defined across separate files generated `.g.dart` files that failed to compile with `Method not found: 'rest<Type>FromJson'` and `The method 'toJson' isn't defined for type '<Type>'`.
+  - The model generator now automatically inspects model field types (including types nested in `List<T>` and `Map<K, V>`) and emits explicit imports for both the source declaration file and its generated `.g.dart` counterpart.
+  - No manual `export` statements or consumer code changes required.
+
+---
+
 ## 1.4.0
 
 - **Migrated from `int` Milliseconds to `Duration`**:

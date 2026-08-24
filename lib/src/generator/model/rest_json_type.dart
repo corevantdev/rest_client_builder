@@ -79,10 +79,14 @@ class RestDateTimeJsonType extends RestJsonType {
 /// Enum encoded via `.name` / `values.byName`.
 class RestEnumJsonType extends RestJsonType {
   /// Creates an enum type.
-  const RestEnumJsonType(this.enumName);
+  const RestEnumJsonType(this.enumName, {this.sourceUri});
 
   /// Enum type name.
   final String enumName;
+
+  /// Library URI where this enum is declared, or `null` when it lives in the
+  /// same library as the model being generated.
+  final String? sourceUri;
 
   @override
   String get displayName => enumName;
@@ -91,10 +95,14 @@ class RestEnumJsonType extends RestJsonType {
 /// Nested model with `fromJson` / `toJson`.
 class RestNestedJsonType extends RestJsonType {
   /// Creates a nested model type.
-  const RestNestedJsonType(this.className);
+  const RestNestedJsonType(this.className, {this.sourceUri});
 
   /// Nested class name.
   final String className;
+
+  /// Library URI where this class is declared, or `null` when it lives in the
+  /// same library as the model being generated.
+  final String? sourceUri;
 
   @override
   String get displayName => className;

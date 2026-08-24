@@ -145,6 +145,37 @@ void main() {
       expect(source, contains('instance.role.name'));
       expect(source, contains('instance.address?.toJson()'));
     });
+
+    test('RestModelSourceWriter emits cross-file imports and generated counterparts', () {
+      const sourceWriter = RestModelSourceWriter();
+      const model = RestModelClassModel(
+        name: 'ParentModel',
+        extraImports: {'package:my_app/models/child_model.dart'},
+        fields: [
+          RestModelFieldModel(
+            name: 'child',
+            typeName: 'ChildModel',
+            jsonType: RestNestedJsonType(
+              'ChildModel',
+              sourceUri: 'package:my_app/models/child_model.dart',
+            ),
+            isNullable: false,
+          ),
+        ],
+      );
+
+      final unit = const GenerationUnit(
+        models: [model],
+        sourceLibraryName: 'package:my_app/models/parent_model.dart',
+      );
+
+      final output = sourceWriter.write(unit);
+      expect(output, isNotNull);
+      expect(output, contains("import 'package:my_app/models/parent_model.dart';"));
+      expect(output, contains("import 'package:my_app/rest_client_builder/models/child_model.g.dart';"));
+      expect(output, contains("import 'package:my_app/models/child_model.dart';"));
+      expect(output, contains('restChildModelFromJson('));
+    });
   });
 
   group('RestApi writer', () {

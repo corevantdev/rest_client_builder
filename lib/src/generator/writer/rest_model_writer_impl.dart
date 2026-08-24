@@ -1,6 +1,7 @@
 import 'package:dart_style/dart_style.dart';
 
 import '../model/generation_models.dart';
+import '../utils/import_uri_resolver.dart';
 import 'source_writer.dart';
 
 /// Writes `_$ModelFromJson` / `_$ModelToJson` helpers for `@RestModel` classes.
@@ -250,6 +251,16 @@ class RestModelSourceWriter implements SourceWriter {
     
     final output = StringBuffer();
     output.writeln("import '${unit.sourceLibraryName}';");
+    final extraImports = <String>{};
+    for (final model in unit.models) {
+      extraImports.addAll(model.extraImports);
+    }
+    for (final uri in extraImports) {
+      if (uri != unit.sourceLibraryName) {
+        output.writeln("import '${resolveGeneratedImportUri(uri)}';");
+        output.writeln("import '$uri';");
+      }
+    }
     output.writeln();
     output.writeln(chunks.join('\n\n'));
     

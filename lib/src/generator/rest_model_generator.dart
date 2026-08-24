@@ -4,6 +4,7 @@ import 'package:build/build.dart';
 import 'package:source_gen/source_gen.dart';
 
 import 'model/generation_models.dart';
+import 'utils/import_uri_resolver.dart';
 import 'validator/generation_validator.dart';
 import 'validator/rest_model_validator_impl.dart';
 import 'validator/validation_issue.dart';
@@ -41,6 +42,18 @@ class RestModelGenerator extends Generator {
     importBuffer.writeln('// ignore_for_file: type=lint');
     importBuffer.writeln("import 'package:rest_client_builder/rest_client_builder.dart';");
     importBuffer.writeln("import '$sourceUri';");
+
+    final extraImports = <String>{};
+    for (final model in unit.models) {
+      extraImports.addAll(model.extraImports);
+    }
+
+    for (final uri in extraImports) {
+      if (uri != sourceUri) {
+        importBuffer.writeln("import '${resolveGeneratedImportUri(uri)}';");
+        importBuffer.writeln("import '$uri';");
+      }
+    }
 
     final codeBuffer = StringBuffer();
     for (final model in unit.models) {
