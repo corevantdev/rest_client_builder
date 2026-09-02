@@ -20,6 +20,7 @@ class RestModelGenerator extends Generator {
     this.visitor = const DefaultRestModelVisitor(),
     this.validator = const DefaultRestModelValidator(),
     this.writer = const DefaultRestModelWriter(),
+    this.outputDir = 'generated',
   });
 
   /// Element → model visitor.
@@ -30,6 +31,9 @@ class RestModelGenerator extends Generator {
 
   /// Model source writer.
   final RestModelWriter writer;
+
+  /// Output subfolder name (e.g. `generated` or `rest_client_builder`).
+  final String outputDir;
 
   @override
   Future<String> generate(LibraryReader library, BuildStep buildStep) async {
@@ -50,7 +54,7 @@ class RestModelGenerator extends Generator {
 
     for (final uri in extraImports) {
       if (uri != sourceUri) {
-        importBuffer.writeln("import '${resolveGeneratedImportUri(uri)}';");
+        importBuffer.writeln("import '${resolveGeneratedImportUri(uri, outputDir: outputDir)}';");
         importBuffer.writeln("import '$uri';");
       }
     }

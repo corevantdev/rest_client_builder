@@ -22,6 +22,7 @@ class RestApiGenerator extends Generator {
     this.visitor = const DefaultRestApiVisitor(),
     this.validator = const DefaultRestApiValidator(),
     this.writer = const DefaultRestApiWriter(),
+    this.outputDir = 'generated',
   });
 
   /// Element → model visitor.
@@ -32,6 +33,9 @@ class RestApiGenerator extends Generator {
 
   /// Source writer.
   final RestApiWriter writer;
+
+  /// Output subfolder name (e.g. `generated` or `rest_client_builder`).
+  final String outputDir;
 
   @override
   Future<String> generate(LibraryReader library, BuildStep buildStep) async {
@@ -61,7 +65,7 @@ class RestApiGenerator extends Generator {
 
     for (final uri in modelUris) {
       if (uri != sourceUri) {
-        importBuffer.writeln("import '${resolveGeneratedImportUri(uri)}';");
+        importBuffer.writeln("import '${resolveGeneratedImportUri(uri, outputDir: outputDir)}';");
         importBuffer.writeln("import '$uri';");
       }
     }

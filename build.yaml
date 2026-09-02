@@ -1,15 +1,41 @@
 # build_runner configuration for rest_client_builder.
 #
-# All generated outputs land under:
-#   lib/rest_client_builder/<original-path>/
+# Generated outputs land under lib/<output_dir>/ (default: lib/generated/).
 #
-# Examples:
-#   lib/models/user.dart
-#     -> lib/rest_client_builder/models/user.g.dart
-#   lib/api/demo_api.dart
-#     -> lib/rest_client_builder/api/demo_api.rest.g.dart
-#   lib/config/app_config.dart
-#     -> lib/rest_client_builder/config/app_config.rest.config.g.dart
+# Examples (with default output_dir):
+#   lib/models/user.dart         → lib/generated/models/user.g.dart
+#   lib/api/demo_api.dart        → lib/generated/api/demo_api.rest.g.dart
+#   lib/config/app_config.dart   → lib/generated/config/app_config.rest.config.g.dart
+#
+# ──────────────────────────────────────────────────────────────────────────────
+# Customising the output folder
+# ──────────────────────────────────────────────────────────────────────────────
+# Add the following to your app's build.yaml to change the folder name:
+#
+#   targets:
+#     $default:
+#       builders:
+#         rest_client_builder|rest_model:
+#           options:
+#             output_dir: my_gen          # default: generated
+#         rest_client_builder|rest_api:
+#           options:
+#             output_dir: my_gen
+#         rest_client_builder|rest_configuration:
+#           options:
+#             output_dir: my_gen
+#         rest_client_builder|rest_export:
+#           enabled: true                 # opt-in; output_dir defaults to "generated"
+#           options:
+#             output_dir: my_gen          # ONLY needed if you changed output_dir above
+#
+# ──────────────────────────────────────────────────────────────────────────────
+# Migration from 1.4.1 (output_dir was rest_client_builder)
+# ──────────────────────────────────────────────────────────────────────────────
+# If you committed lib/rest_client_builder/ generated files, run:
+#   dart run build_runner clean
+#   dart run build_runner build --delete-conflicting-outputs
+# and update imports from rest_client_builder/ → generated/.
 
 
 targets:
@@ -21,25 +47,40 @@ targets:
         enabled: true
       rest_client_builder|rest_configuration:
         enabled: true
+      rest_client_builder|rest_export:
+        enabled: false   # opt-in: set to true to generate lib/generated.g.dart barrel
+
 
 builders:
   rest_model:
     import: "package:rest_client_builder/src/generator/builder.dart"
     builder_factories: ["restModelBuilder"]
-    build_extensions: {"^lib/{{}}.dart": ["lib/rest_client_builder/{{}}.g.dart"]}
+    build_extensions: {"^lib/{{}}.dart": ["lib/generated/{{}}.g.dart"]}
     auto_apply: dependents
     build_to: source
 
   rest_api:
     import: "package:rest_client_builder/src/generator/builder.dart"
     builder_factories: ["restApiBuilder"]
-    build_extensions: {"^lib/{{}}.dart": ["lib/rest_client_builder/{{}}.rest.g.dart"]}
+    build_extensions: {"^lib/{{}}.dart": ["lib/generated/{{}}.rest.g.dart"]}
     auto_apply: dependents
     build_to: source
 
   rest_configuration:
     import: "package:rest_client_builder/src/generator/builder.dart"
     builder_factories: ["restConfigurationBuilder"]
-    build_extensions: {"^lib/{{}}.dart": ["lib/rest_client_builder/{{}}.rest.config.g.dart"]}
+    build_extensions: {"^lib/{{}}.dart": ["lib/generated/{{}}.rest.config.g.dart"]}
     auto_apply: dependents
     build_to: source
+
+  rest_export:
+    import: "package:rest_client_builder/src/generator/builder.dart"
+    builder_factories: ["restExportBuilder"]
+    build_extensions: {"$lib$": ["lib/generated.g.dart"]}
+    auto_apply: dependents
+    build_to: source
+    required_inputs:
+      - ".g.dart"
+      - ".rest.g.dart"
+      - ".rest.config.g.dart"
+    runs_before: []

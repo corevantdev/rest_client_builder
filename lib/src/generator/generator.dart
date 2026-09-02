@@ -11,6 +11,7 @@ export 'builder.dart';
 export 'model/generation_models.dart';
 export 'pipeline/generation_pipeline.dart';
 export 'rest_api_generator.dart';
+export 'rest_export_builder.dart';
 export 'rest_model_generator.dart';
 export 'validator/generation_validator.dart';
 export 'validator/rest_api_validator_impl.dart';

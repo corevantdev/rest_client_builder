@@ -6,6 +6,81 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## 1.4.2
+
+### ⚠ Breaking Change — Output Directory Renamed
+
+The default output folder for generated files has changed from
+`lib/rest_client_builder/` to **`lib/generated/`**.
+
+**Migration steps for existing consumers:**
+```sh
+dart run build_runner clean
+dart run build_runner build --delete-conflicting-outputs
+```
+Then update any direct imports from `rest_client_builder/…` to `generated/…`.
+If you want to keep the old folder, add this to your app's `build.yaml`:
+```yaml
+targets:
+  $default:
+    builders:
+      rest_client_builder|rest_model:
+        options:
+          output_dir: rest_client_builder
+      rest_client_builder|rest_api:
+        options:
+          output_dir: rest_client_builder
+      rest_client_builder|rest_configuration:
+        options:
+          output_dir: rest_client_builder
+```
+
+### New Features
+
+- **Configurable `output_dir`** — the folder where generated files land is now
+  configurable via `options.output_dir` in the consumer's `build.yaml`.
+  Default is `generated`. All cross-file import resolution inside generators
+  automatically uses the configured folder.
+
+- **Auto-refreshed barrel export builder (`rest_export`)** — opt-in builder
+  that writes `lib/<output_dir>.g.dart` after every build. The barrel contains
+  one `export` statement per generated `.dart` file in `lib/<output_dir>/`,
+  sorted alphabetically. Because `build_runner` removes outputs for deleted
+  source files before this builder runs, stale exports never accumulate.
+
+  Enable in your `build.yaml`:
+  ```yaml
+  targets:
+    $default:
+      builders:
+        rest_client_builder|rest_export:
+          enabled: true
+          options:
+            output_dir: generated   # must match other builders
+  ```
+  Usage after enabling:
+  ```dart
+  import 'package:my_app/generated.g.dart'; // one import — all generated code
+  ```
+
+### Bug Fixes
+
+- **Fixed: Flutter 3.38.x / ObjectBox compatibility** — resolved an unsolvable
+  pub constraint graph when `rest_client_builder` was used alongside
+  `objectbox_generator ^5.3.2` on Flutter 3.38.x.
+
+  **Root cause:** `analyzer: '>=10.2.0 <15.0.0'` required `meta: ^1.18.0`.
+  Flutter 3.38.1 pins `meta` to `1.17.0`, making the constraint unsatisfiable.
+
+  **Fix:** Lowered the `analyzer` lower-bound to `>=8.1.1 <11.0.0` — the same
+  band used by `objectbox_generator 5.3.2`. Also widened `dart_style` to
+  `'>=2.3.7 <4.0.0'` and relaxed `source_gen` to `^4.0.1`.
+
+  No API changes. No consumer code changes required (other than the output_dir
+  migration above).
+
+---
+
 ## 1.4.1
 
 - **Cross-File `@RestModel` Import Resolution**:
