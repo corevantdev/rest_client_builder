@@ -16,5 +16,6 @@ export 'http/streaming_annotation.dart';
 export 'queue/offline_queue_annotation.dart';
 
 export 'models/rest_model.dart';
+export 'models/rest_key.dart';
 export 'multipart/multipart_annotations.dart';
 export 'parameters/parameter_annotations.dart';

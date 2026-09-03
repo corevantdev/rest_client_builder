@@ -18,6 +18,7 @@ class User {
     this.localOnly,
   });
 
+  @RestKey(['id', '_id'])
   final String? id;
 
   @JsonKey(name: 'user_name')

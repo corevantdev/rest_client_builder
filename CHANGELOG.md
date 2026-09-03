@@ -6,6 +6,47 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## 1.4.3
+
+### 🚀 Package Split (Zero Runtime Overhead)
+
+- **Separated Codegen from Runtime**: All code-generation tools (`analyzer`, `build`, `source_gen`, `code_builder`, `dart_style`, `glob`) have been extracted into a dedicated companion package: **`rest_client_builder_generator`**.
+- `rest_client_builder` is now purely a runtime and annotation package containing Dio, `RestResult`, and annotations with **zero transitive compiler dependencies**.
+- This completely eliminates any potential dependency conflicts (such as Flutter SDK `meta` pins or `objectbox_generator` analyzer version locks) in consumer app runtime graphs.
+
+**Consumer Setup:**
+```yaml
+dependencies:
+  rest_client_builder: ^1.4.3
+
+dev_dependencies:
+  rest_client_builder_generator: ^1.4.3
+  build_runner: ^2.4.15
+```
+
+### ✨ New Features
+
+- **`@RestKey` Multi-Key Fallback**:
+  Introduced `@RestKey(['id', '_id', 'userId'])` for `@RestModel` fields. Deserialization tries each key in order and maps the first non-null value found. Useful for APIs returning different field names across backends (e.g., MongoDB `_id` vs SQL `id`).
+  ```dart
+  @RestModel()
+  class User {
+    const User({required this.id});
+
+    @RestKey(['id', '_id'])
+    final String id;
+  }
+  ```
+
+- **Null-Safety for `@Query` Parameters**:
+  Optional nullable query parameters (e.g. `@Query('filter') String? filter`) are automatically omitted from the request query map when `null`.
+
+### 📖 Documentation & Pub Score
+- Added dedicated **Getting Started** section to README.
+- Updated all installation instructions and import paths.
+
+---
+
 ## 1.4.2
 
 ### ⚠ Breaking Change — Output Directory Renamed

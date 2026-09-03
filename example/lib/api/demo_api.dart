@@ -3,8 +3,8 @@ import 'package:rest_client_builder/rest_client_builder.dart';
 import '../core/interceptors.dart';
 import '../models/user.dart';
 
-import '../rest_client_builder/api/demo_api.rest.g.dart';
-export '../rest_client_builder/api/demo_api.rest.g.dart';
+import '../generated/api/demo_api.rest.g.dart';
+export '../generated/api/demo_api.rest.g.dart';
 
 /// Example CRUD + multipart REST API.
 ///

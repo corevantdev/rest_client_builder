@@ -4,8 +4,8 @@ import '../core/payment_config.dart';
 export '../core/payment_config.dart';
 import '../models/payment.dart';
 
-import '../rest_client_builder/api/payment_api.rest.g.dart';
-export '../rest_client_builder/api/payment_api.rest.g.dart';
+import '../generated/api/payment_api.rest.g.dart';
+export '../generated/api/payment_api.rest.g.dart';
 
 /// Dedicated Payment API using Option 3: Dedicated Configuration via Annotation.
 ///

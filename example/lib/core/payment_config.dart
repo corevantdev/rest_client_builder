@@ -1,6 +1,6 @@
 import 'package:rest_client_builder/rest_client_builder.dart';
 
-export '../rest_client_builder/core/payment_config.rest.config.g.dart';
+export '../generated/core/payment_config.rest.config.g.dart';
 
 /// Dedicated configuration for Payment / Checkout microservices.
 ///

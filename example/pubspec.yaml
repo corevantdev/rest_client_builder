@@ -11,5 +11,7 @@ dependencies:
     path: ../
 
 dev_dependencies:
+  rest_client_builder_generator:
+    path: ../../rest_client_builder_generator
   build_runner: ^2.4.15
   lints: ^5.1.1

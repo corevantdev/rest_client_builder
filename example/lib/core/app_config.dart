@@ -2,7 +2,7 @@ import 'package:rest_client_builder/rest_client_builder.dart';
 
 import 'interceptors.dart';
 
-export '../rest_client_builder/core/app_config.rest.config.g.dart';
+export '../generated/core/app_config.rest.config.g.dart';
 
 /// The application's single source of REST configuration.
 ///

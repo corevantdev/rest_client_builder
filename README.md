@@ -27,23 +27,18 @@ Declare endpoints once. Call generated type-safe clients directly (`userService.
 
 ---
 
-## Installation
+## Getting Started
+
+Add both packages:
 
 ```yaml
 # pubspec.yaml
 dependencies:
-  rest_client_builder: ^1.4.1
+  rest_client_builder: ^1.4.3
 
 dev_dependencies:
+  rest_client_builder_generator: ^1.4.3   # codegen only — never reaches production
   build_runner: ^2.4.15
-```
-
-For local package development:
-
-```yaml
-dependencies:
-  rest_client_builder:
-    path: ../rest_client_builder
 ```
 
 ```bash
@@ -53,13 +48,21 @@ dart run build_runner build --delete-conflicting-outputs
 dart run build_runner watch --delete-conflicting-outputs
 ```
 
-All generated files land centrally under `lib/rest_client_builder/`, preserving your project's folder structure.
+All generated files land centrally under `lib/generated/`, preserving your project's folder structure.
 
 | Builder | Generated Output |
 |---------|------------------|
-| `rest_model` | `lib/rest_client_builder/.../file.g.dart` |
-| `rest_api` | `lib/rest_client_builder/.../file.rest.g.dart` |
-| `rest_configuration` | `lib/rest_client_builder/.../file.rest.config.g.dart` |
+| `rest_model` | `lib/generated/.../file.g.dart` |
+| `rest_api` | `lib/generated/.../file.rest.g.dart` |
+| `rest_configuration` | `lib/generated/.../file.rest.config.g.dart` |
+
+> **Optional barrel export:** add `rest_client_builder_generator|rest_export: enabled: true` in your `build.yaml` to auto-generate `lib/generated.g.dart` — one import for everything.
+
+---
+
+## Installation
+
+See [Getting Started](#getting-started) above.
 
 ---
 
@@ -111,7 +114,7 @@ class AppRestConfiguration implements RestApiGlobalConfiguration {
 
 ### Step 2: Define your Model
 
-Annotate a standard class with `@RestModel()`. The generator produces all serialization code automatically.
+Annotate a standard class with `@RestModel()`. The generator produces all serialization code automatically. Use `@RestKey` to handle multiple fallback JSON keys (e.g. MongoDB `_id` vs SQL `id`):
 
 ```dart
 // lib/models/user.dart
@@ -119,8 +122,13 @@ import 'package:rest_client_builder/rest_client_builder.dart';
 
 @RestModel()
 class User {
-  const User({required this.id, required this.name});
+  const User({
+    required this.id,
+    required this.name,
+  });
 
+  /// Accepts 'id', '_id', or 'userId' — first non-null key wins:
+  @RestKey(['id', '_id', 'userId'])
   final String id;
 
   @JsonKey(name: 'user_name')
@@ -137,8 +145,8 @@ Write a pure abstract class annotated with `@RestApi()`. Define your endpoints u
 import 'package:rest_client_builder/rest_client_builder.dart';
 import '../models/user.dart';
 
-import '../rest_client_builder/api/user_service.rest.g.dart';
-export '../rest_client_builder/api/user_service.rest.g.dart';
+import '../generated/api/user_service.rest.g.dart';
+export '../generated/api/user_service.rest.g.dart';
 
 @RestApi(baseUrl: 'https://api.example.com')
 abstract class UserService {
