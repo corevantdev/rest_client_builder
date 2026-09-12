@@ -11,6 +11,8 @@ class RestClientBuilder {
   Duration? _connectTimeout;
   Duration? _receiveTimeout;
   Duration? _sendTimeout;
+  Duration? _idleTimeout;
+  int? _maxConnectionsPerHost;
   bool? _enableLog;
   int? _retryMaxAttempts;
   Duration? _retryDelay;
@@ -46,6 +48,30 @@ class RestClientBuilder {
     if (connectTimeout != null) _connectTimeout = connectTimeout;
     if (receiveTimeout != null) _receiveTimeout = receiveTimeout;
     if (sendTimeout != null) _sendTimeout = sendTimeout;
+    return this;
+  }
+
+  /// Configures native HTTP socket connection pooling.
+  RestClientBuilder connectionPool({
+    Duration? idleTimeout,
+    int? maxConnectionsPerHost,
+  }) {
+    if (idleTimeout != null) _idleTimeout = idleTimeout;
+    if (maxConnectionsPerHost != null) {
+      _maxConnectionsPerHost = maxConnectionsPerHost;
+    }
+    return this;
+  }
+
+  /// Sets the idle connection timeout in the connection pool before closing.
+  RestClientBuilder idleTimeout(Duration idleTimeout) {
+    _idleTimeout = idleTimeout;
+    return this;
+  }
+
+  /// Sets the maximum concurrent connections per host.
+  RestClientBuilder maxConnectionsPerHost(int maxConnections) {
+    _maxConnectionsPerHost = maxConnections;
     return this;
   }
 
@@ -89,6 +115,8 @@ class RestClientBuilder {
       connectTimeout: _connectTimeout,
       receiveTimeout: _receiveTimeout,
       sendTimeout: _sendTimeout,
+      idleTimeout: _idleTimeout,
+      maxConnectionsPerHost: _maxConnectionsPerHost,
       enableLog: _enableLog,
       retryMaxAttempts: _retryMaxAttempts,
       retryDelay: _retryDelay,

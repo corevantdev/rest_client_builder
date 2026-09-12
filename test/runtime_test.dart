@@ -19,6 +19,12 @@ class _StubConfig implements RestClientConfig {
   Duration get sendTimeout => const Duration(seconds: 1);
 
   @override
+  Duration? get idleTimeout => const Duration(seconds: 90);
+
+  @override
+  int? get maxConnectionsPerHost => 12;
+
+  @override
   bool get enableLog => false;
 
   @override
@@ -57,8 +63,32 @@ void main() {
     test('interfaces are exportable and stub-implementable', () {
       final client = _StubClient();
       expect(client.config.baseUrl, 'https://api.example.com');
+      expect(client.config.idleTimeout, const Duration(seconds: 90));
+      expect(client.config.maxConnectionsPerHost, 12);
       expect(RestBodyType.json.name, 'json');
       expect(RestBodyType.values, contains(RestBodyType.multipart));
+    });
+
+    test('RestClientBuilder configures connection pool settings', () {
+      final client = RestClientBuilder()
+          .baseUrl('https://api.example.com')
+          .connectionPool(
+            idleTimeout: const Duration(seconds: 90),
+            maxConnectionsPerHost: 12,
+          )
+          .build();
+
+      expect(client.config.idleTimeout, const Duration(seconds: 90));
+      expect(client.config.maxConnectionsPerHost, 12);
+
+      final client2 = RestClientBuilder()
+          .baseUrl('https://api.example.com')
+          .idleTimeout(const Duration(seconds: 45))
+          .maxConnectionsPerHost(8)
+          .build();
+
+      expect(client2.config.idleTimeout, const Duration(seconds: 45));
+      expect(client2.config.maxConnectionsPerHost, 8);
     });
 
     test('stub client can return failure results', () async {

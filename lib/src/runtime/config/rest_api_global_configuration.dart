@@ -32,6 +32,16 @@ abstract interface class RestApiGlobalConfiguration {
   /// Send timeout.
   Duration? get sendTimeout;
 
+  /// How long an idle connection stays in the pool before closing.
+  ///
+  /// When null, uses the platform/HTTP adapter default (e.g. 3 seconds in Dart's HttpClient).
+  Duration? get idleTimeout;
+
+  /// Maximum concurrent connections per host.
+  ///
+  /// When null, uses the platform/HTTP adapter default (e.g. 6 in Dart's HttpClient).
+  int? get maxConnectionsPerHost;
+
   /// Whether to enable logging.
   bool? get enableLog;
 
@@ -52,6 +62,8 @@ extension RestApiGlobalConfigurationClientFactory
         connectTimeout: connectTimeout,
         receiveTimeout: receiveTimeout,
         sendTimeout: sendTimeout,
+        idleTimeout: idleTimeout,
+        maxConnectionsPerHost: maxConnectionsPerHost,
         enableLog: enableLog,
         retryMaxAttempts: retryMaxAttempts,
         retryDelay: retryDelay,

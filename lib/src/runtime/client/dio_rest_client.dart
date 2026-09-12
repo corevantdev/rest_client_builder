@@ -9,6 +9,7 @@ import '../../core/sse/sse_parser.dart';
 import '../cache/rest_response_cache.dart';
 import '../config/rest_client_config.dart';
 import '../config/rest_execution_options.dart';
+import '../dio/dio_connection_pool.dart';
 import '../dio/dio_rest_http_engine.dart';
 import '../interceptor/default_interceptor_pipeline.dart';
 import '../interceptor/logging_rest_interceptor.dart';
@@ -333,5 +334,6 @@ class DioRestClient implements RestClient {
       ..receiveTimeout = config.receiveTimeout
       ..sendTimeout = config.sendTimeout
       ..validateStatus = (_) => true;
+    configureConnectionPool(dio, config);
   }
 }

@@ -1,6 +1,6 @@
 import 'package:rest_client_builder/rest_client_builder.dart';
 
-export '../generated/core/payment_config.rest.config.g.dart';
+export '../rest_client_builder/core/payment_config.rest.config.g.dart';
 
 /// Dedicated configuration for Payment / Checkout microservices.
 ///
@@ -27,6 +27,10 @@ class PaymentRestConfiguration implements RestApiGlobalConfiguration {
   final Duration? receiveTimeout = const Duration(seconds: 15);
   @override
   final Duration? sendTimeout = const Duration(seconds: 15);
+  @override
+  final Duration? idleTimeout = const Duration(seconds: 60);
+  @override
+  final int? maxConnectionsPerHost = 6;
   @override
   final bool? enableLog = true;
   @override

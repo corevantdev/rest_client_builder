@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.4.4
+
+### ✨ New Features
+
+- **Native HTTP Connection Pooling Settings (`idleTimeout` & `maxConnectionsPerHost`)**:
+  - Added `idleTimeout` (`Duration?`) and `maxConnectionsPerHost` (`int?`) to `RestApiGlobalConfiguration`, `RestClientConfig`, `BasicRestClientConfig`, `RestGlobalConfig`, and `RestClientBuilder`.
+  - Configures Dio's underlying `IOHttpClientAdapter` and native `HttpClient` with custom idle socket keep-alive duration (e.g. 90 seconds) and maximum concurrent connections per host, eliminating costly TCP/TLS handshake latency on sequential API calls.
+  - Safely falls back to platform defaults when omitted and no-ops on non-IO platforms (e.g. Flutter Web).
+
 ---
 
 ## 1.4.3

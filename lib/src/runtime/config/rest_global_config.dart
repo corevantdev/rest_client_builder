@@ -15,6 +15,8 @@ class RestGlobalConfig extends BasicRestClientConfig {
     Duration? connectTimeout,
     Duration? receiveTimeout,
     Duration? sendTimeout,
+    super.idleTimeout,
+    super.maxConnectionsPerHost,
     bool? enableLog,
     int? retryMaxAttempts,
     Duration? retryDelay,

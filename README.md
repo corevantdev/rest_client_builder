@@ -241,6 +241,14 @@ class PaymentRestConfiguration implements RestApiGlobalConfiguration {
   @override
   final Duration? sendTimeout = const Duration(seconds: 15);
 
+  /// Keep idle TCP sockets alive in the connection pool (avoids frequent TLS handshakes).
+  @override
+  final Duration? idleTimeout = const Duration(seconds: 90);
+
+  /// Maximum concurrent HTTP connections per host.
+  @override
+  final int? maxConnectionsPerHost = 12;
+
   @override
   final bool? enableLog = true;
 

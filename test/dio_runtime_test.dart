@@ -175,6 +175,26 @@ void main() {
       );
       expect(connection.code, RestErrorCodes.connection);
     });
+
+    test('configures native IOHttpClientAdapter connection pool settings', () {
+      final dio = Dio();
+      DioRestClient(
+        config: const BasicRestClientConfig(
+          baseUrl: 'https://api.example.com',
+          idleTimeout: Duration(seconds: 90),
+          maxConnectionsPerHost: 12,
+        ),
+        dio: dio,
+      );
+
+      final adapter = dio.httpClientAdapter;
+      final dynamic customAdapter = adapter;
+      if (customAdapter.createHttpClient != null) {
+        final dynamic client = customAdapter.createHttpClient!();
+        expect(client.idleTimeout, const Duration(seconds: 90));
+        expect(client.maxConnectionsPerHost, 12);
+      }
+    });
   });
 }
 

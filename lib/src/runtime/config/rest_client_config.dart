@@ -21,6 +21,12 @@ abstract interface class RestClientConfig {
   /// Default send timeout.
   Duration get sendTimeout;
 
+  /// How long an idle connection stays in the pool before closing.
+  Duration? get idleTimeout;
+
+  /// Maximum concurrent connections per host.
+  int? get maxConnectionsPerHost;
+
   /// Whether request/response logging is enabled.
   bool get enableLog;
 

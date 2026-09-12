@@ -182,6 +182,14 @@ void main() {
       final fresh = config.createFreshRestClient();
       expect(identical(shared, fresh), isFalse);
     });
+
+    test('exposes connection pool settings on restClientConfig', () {
+      final config = _PoolRestConfiguration();
+      expect(config.idleTimeout, const Duration(seconds: 90));
+      expect(config.maxConnectionsPerHost, 12);
+      expect(config.restClientConfig.idleTimeout, const Duration(seconds: 90));
+      expect(config.restClientConfig.maxConnectionsPerHost, 12);
+    });
   });
 }
 
@@ -202,6 +210,37 @@ class _TestRestConfiguration implements RestApiGlobalConfiguration {
   final Duration? receiveTimeout = null;
   @override
   final Duration? sendTimeout = null;
+  @override
+  final Duration? idleTimeout = null;
+  @override
+  final int? maxConnectionsPerHost = null;
+  @override
+  final bool? enableLog = false;
+  @override
+  final List<RestInterceptor> interceptors = const [];
+}
+
+class _PoolRestConfiguration implements RestApiGlobalConfiguration {
+  @override
+  final String baseUrl = 'https://pool.test';
+  @override
+  final Map<String, String> headers = const {};
+  @override
+  final int? retryMaxAttempts = null;
+  @override
+  final Duration? retryDelay = null;
+  @override
+  final List<int>? retryStatusCodes = null;
+  @override
+  final Duration? connectTimeout = const Duration(seconds: 5);
+  @override
+  final Duration? receiveTimeout = const Duration(seconds: 10);
+  @override
+  final Duration? sendTimeout = const Duration(seconds: 10);
+  @override
+  final Duration? idleTimeout = const Duration(seconds: 90);
+  @override
+  final int? maxConnectionsPerHost = 12;
   @override
   final bool? enableLog = false;
   @override

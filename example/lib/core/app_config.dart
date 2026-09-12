@@ -2,7 +2,7 @@ import 'package:rest_client_builder/rest_client_builder.dart';
 
 import 'interceptors.dart';
 
-export '../generated/core/app_config.rest.config.g.dart';
+export '../rest_client_builder/core/app_config.rest.config.g.dart';
 
 /// The application's single source of REST configuration.
 ///
@@ -34,6 +34,10 @@ class AppRestConfiguration implements RestApiGlobalConfiguration {
   final Duration? receiveTimeout = const Duration(seconds: 30);
   @override
   final Duration? sendTimeout = const Duration(seconds: 15);
+  @override
+  final Duration? idleTimeout = const Duration(seconds: 90);
+  @override
+  final int? maxConnectionsPerHost = 12;
   @override
   final bool? enableLog = true;
   @override

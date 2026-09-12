@@ -46,6 +46,8 @@ class BasicRestClientConfig implements RestClientConfig {
     this.connectTimeout = const Duration(seconds: 10),
     this.receiveTimeout = const Duration(seconds: 30),
     this.sendTimeout = const Duration(seconds: 30),
+    this.idleTimeout,
+    this.maxConnectionsPerHost,
     this.enableLog = false,
     this.retryMaxAttempts = 1,
     this.retryDelay = Duration.zero,
@@ -68,6 +70,12 @@ class BasicRestClientConfig implements RestClientConfig {
 
   @override
   final Duration sendTimeout;
+
+  @override
+  final Duration? idleTimeout;
+
+  @override
+  final int? maxConnectionsPerHost;
 
   @override
   final bool enableLog;
