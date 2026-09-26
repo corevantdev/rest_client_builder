@@ -33,6 +33,9 @@ class RestGlobalConfig extends BasicRestClientConfig {
           retryMaxAttempts: retryMaxAttempts ?? 0,
           retryDelay: retryDelay ?? Duration.zero,
           interceptors: interceptors ?? const <RestInterceptor>[],
-          logger: logger ?? const NoOpRestLogger(),
+          logger: logger ??
+              ((enableLog ?? true)
+                  ? const ConsoleRestLogger(level: RestLogLevel.debug)
+                  : const NoOpRestLogger()),
         );
 }

@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.4.5
+
+### ✨ New Features & Improvements
+
+- **Omit Null Fields by Default (`@RestModel(includeIfNull: false)`)**:
+  - Added `includeIfNull` parameter to `@RestModel` annotation with `false` as the default.
+  - Automatically omits `null` fields from generated `toJson()` maps and HTTP wire payloads, preventing empty optional filters from being sent as `"field": null`.
+  - Supports field-level override via `@JsonKey(includeIfNull: true)` when explicit `null` keys are required by an API endpoint.
+
+- **Copy-Pasteable cURL Request Logging**:
+  - `LoggingRestInterceptor` now outputs ready-to-run `curl` commands for all HTTP requests (with method, URL, headers, and request body).
+  - Automatically redacts sensitive header values (`Authorization`, `Cookie`, `X-Api-Key`, etc.).
+
+- **ANSI Color Terminal Formatting**:
+  - `ConsoleRestLogger` now outputs colorized logs with ANSI color codes: 🟢 Green (`2xx`), 🔵 Cyan (`debug`/`cURL`), 🟡 Yellow (`warning`), 🔴 Red (`4xx`/`5xx` & errors), and ⚪ Gray (`verbose` & headers).
+
+- **Improved Error & Response Body Visibility**:
+  - `LoggingRestInterceptor` logs response bodies and flags HTTP `4xx`/`5xx` responses as error-level logs.
+  - `RestGlobalConfig` now defaults to `ConsoleRestLogger(level: RestLogLevel.debug)` when `enableLog` is enabled, ensuring logs and cURL commands are immediately visible.
+
+---
+
 ## 1.4.4
 
 ### ✨ New Features

@@ -25,6 +25,7 @@ class RestModel {
     this.createFactory = true,
     this.createToJson = true,
     this.explicitToJson = true,
+    this.includeIfNull = false,
   });
 
   /// Whether a `fromJson` factory should be generated.
@@ -35,4 +36,9 @@ class RestModel {
 
   /// Whether nested models should call `toJson` explicitly.
   final bool explicitToJson;
+
+  /// Whether `null` values should be included in generated `toJson()` maps.
+  ///
+  /// Defaults to `false` (omits all `null` fields from JSON payload).
+  final bool includeIfNull;
 }

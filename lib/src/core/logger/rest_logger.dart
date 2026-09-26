@@ -77,13 +77,26 @@ abstract class RestLogger {
   }
 }
 
-/// [RestLogger] that writes to the console via `print`.
+/// [RestLogger] that writes to the console via `print` with ANSI color formatting.
 class ConsoleRestLogger extends RestLogger {
-  /// Creates a console logger with the given minimum [level].
-  const ConsoleRestLogger({this.level = RestLogLevel.info});
+  /// Creates a console logger with the given minimum [level] and color support.
+  const ConsoleRestLogger({
+    this.level = RestLogLevel.debug,
+    this.useColors = true,
+  });
 
   @override
   final RestLogLevel level;
+
+  /// Whether to format console output with ANSI color codes.
+  final bool useColors;
+
+  static const _reset = '\x1B[0m';
+  static const _red = '\x1B[31m';
+  static const _green = '\x1B[32m';
+  static const _yellow = '\x1B[33m';
+  static const _cyan = '\x1B[36m';
+  static const _gray = '\x1B[90m';
 
   @override
   void log(
@@ -96,15 +109,38 @@ class ConsoleRestLogger extends RestLogger {
       return;
     }
 
-    final buffer = StringBuffer('[rest_client_builder][${level.name}] $message');
+    final color = _levelColor(level);
+    final prefix = useColors
+        ? '$_gray[rest_client_builder]$_reset$color[${level.name}]$_reset'
+        : '[rest_client_builder][${level.name}]';
+
+    final buffer = StringBuffer('$prefix $message');
     if (error != null) {
-      buffer.write(' | error: $error');
+      buffer.write(useColors ? ' $_red| error: $error$_reset' : ' | error: $error');
     }
     // ignore: avoid_print
     print(buffer.toString());
     if (stackTrace != null) {
       // ignore: avoid_print
       print(stackTrace);
+    }
+  }
+
+  String _levelColor(RestLogLevel level) {
+    if (!useColors) return '';
+    switch (level) {
+      case RestLogLevel.error:
+        return _red;
+      case RestLogLevel.warning:
+        return _yellow;
+      case RestLogLevel.info:
+        return _green;
+      case RestLogLevel.debug:
+        return _cyan;
+      case RestLogLevel.verbose:
+        return _gray;
+      case RestLogLevel.none:
+        return '';
     }
   }
 }

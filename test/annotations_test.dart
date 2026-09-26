@@ -131,6 +131,7 @@ void main() {
       expect(model.createFactory, isTrue);
       expect(model.createToJson, isTrue);
       expect(model.explicitToJson, isTrue);
+      expect(model.includeIfNull, isFalse);
 
       const key = JsonKey(name: 'user_name', defaultValue: '');
       expect(key.name, 'user_name');
