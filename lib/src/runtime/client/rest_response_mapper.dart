@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 
 import '../../core/error/rest_error.dart';
 import '../../core/result/rest_result.dart';
@@ -98,22 +99,53 @@ class BasicRestClientConfig implements RestClientConfig {
 
 /// Maps raw [RestClient.execute] results into typed [RestResult]s.
 abstract final class RestResponseMapper {
+  static const _reset = '\x1B[0m';
+  static const _red = '\x1B[31m';
+
+  static void _logConversionError(
+    Type type,
+    Object error,
+    StackTrace stackTrace, {
+    Object? rawData,
+  }) {
+    final buffer = StringBuffer(
+      '$_red[rest_client_builder] Model conversion error for `$type`: $error',
+    );
+    if (rawData != null) {
+      buffer.write(' | payload: $rawData');
+    }
+    buffer.write(_reset);
+
+    developer.log(
+      buffer.toString(),
+      name: 'rest_client_builder',
+      error: error,
+      stackTrace: stackTrace,
+      level: 1000,
+    );
+  }
+
   /// Maps a response into a single model via [fromJson].
   static RestResult<T> mapModel<T>(
     RestResult<RestResponse> result,
     T Function(Map<String, dynamic> json) fromJson,
   ) {
     return _map(result, (data) {
-      if (data is Map<String, dynamic>) {
-        return fromJson(data);
+      try {
+        if (data is Map<String, dynamic>) {
+          return fromJson(data);
+        }
+        if (data is Map) {
+          return fromJson(Map<String, dynamic>.from(data));
+        }
+        throw RestError.validation(
+          'Expected JSON object for model `$T`',
+          details: {'runtimeType': data.runtimeType.toString()},
+        );
+      } catch (error, stackTrace) {
+        _logConversionError(T, error, stackTrace, rawData: data);
+        rethrow;
       }
-      if (data is Map) {
-        return fromJson(Map<String, dynamic>.from(data));
-      }
-      throw RestError.validation(
-        'Expected JSON object for model `$T`',
-        details: {'runtimeType': data.runtimeType.toString()},
-      );
     });
   }
 
@@ -123,21 +155,34 @@ abstract final class RestResponseMapper {
     T Function(Map<String, dynamic> json) fromJson,
   ) {
     return _map(result, (data) {
-      if (data is! List) {
-        throw RestError.validation(
-          'Expected JSON array for `List<$T>`',
-          details: {'runtimeType': data.runtimeType.toString()},
-        );
+      try {
+        if (data is! List) {
+          throw RestError.validation(
+            'Expected JSON array for `List<$T>`',
+            details: {'runtimeType': data.runtimeType.toString()},
+          );
+        }
+        return data.map((item) {
+          try {
+            if (item is Map<String, dynamic>) {
+              return fromJson(item);
+            }
+            if (item is Map) {
+              return fromJson(Map<String, dynamic>.from(item));
+            }
+            throw RestError.validation('Expected JSON object in array');
+          } catch (error, stackTrace) {
+            _logConversionError(T, error, stackTrace, rawData: item);
+            rethrow;
+          }
+        }).toList(growable: false);
+      } catch (error, stackTrace) {
+        if (error is RestError &&
+            error.message.startsWith('Expected JSON array')) {
+          _logConversionError(List<T>, error, stackTrace, rawData: data);
+        }
+        rethrow;
       }
-      return data.map((item) {
-        if (item is Map<String, dynamic>) {
-          return fromJson(item);
-        }
-        if (item is Map) {
-          return fromJson(Map<String, dynamic>.from(item));
-        }
-        throw RestError.validation('Expected JSON object in array');
-      }).toList(growable: false);
     });
   }
 
@@ -168,7 +213,14 @@ abstract final class RestResponseMapper {
     RestResult<RestResponse> result,
     T Function(Object? data) decode,
   ) {
-    return _map(result, decode);
+    return _map(result, (data) {
+      try {
+        return decode(data);
+      } catch (error, stackTrace) {
+        _logConversionError(T, error, stackTrace, rawData: data);
+        rethrow;
+      }
+    });
   }
 
   /// Maps a streaming response body into a raw `Stream<List<int>>`.

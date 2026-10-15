@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.4.6
+
+### ✨ New Features & Improvements
+
+- **`dart:developer` Logging Migration**:
+  - Migrated `ConsoleRestLogger` to use `developer.log` from `dart:developer` instead of `print` or `debugPrint`.
+  - Removes console `print` calls while keeping full ANSI color formatting and integrating cleanly with Dart DevTools and IDE log inspectors.
+
+- **Model Conversion `try-catch` Protection & Red-Colored Error Logging**:
+  - Wrapped model and list conversion (`mapModel`, `mapModelList`, `mapCustom`) in defensive `try-catch` blocks in `RestResponseMapper`.
+  - When deserialization or type casting fails (e.g. `TypeError`, missing fields, corrupted JSON format), the error is logged in red ANSI color (`\x1B[31m` ... `\x1B[0m`) via `developer.log` with the target model type and offending payload before converting to a `Failure` result.
+
+---
+
 ## 1.4.5
 
 ### ✨ New Features & Improvements

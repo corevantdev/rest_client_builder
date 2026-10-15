@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 /// Severity levels for [RestLogger].
 enum RestLogLevel {
   /// Disable all logging.
@@ -77,7 +79,7 @@ abstract class RestLogger {
   }
 }
 
-/// [RestLogger] that writes to the console via `print` with ANSI color formatting.
+/// [RestLogger] that writes to the console via [developer.log] with ANSI color formatting.
 class ConsoleRestLogger extends RestLogger {
   /// Creates a console logger with the given minimum [level] and color support.
   const ConsoleRestLogger({
@@ -118,11 +120,29 @@ class ConsoleRestLogger extends RestLogger {
     if (error != null) {
       buffer.write(useColors ? ' $_red| error: $error$_reset' : ' | error: $error');
     }
-    // ignore: avoid_print
-    print(buffer.toString());
-    if (stackTrace != null) {
-      // ignore: avoid_print
-      print(stackTrace);
+    developer.log(
+      buffer.toString(),
+      name: 'rest_client_builder',
+      level: _developerLogLevel(level),
+      error: error,
+      stackTrace: stackTrace,
+    );
+  }
+
+  int _developerLogLevel(RestLogLevel level) {
+    switch (level) {
+      case RestLogLevel.error:
+        return 1000;
+      case RestLogLevel.warning:
+        return 900;
+      case RestLogLevel.info:
+        return 800;
+      case RestLogLevel.debug:
+        return 700;
+      case RestLogLevel.verbose:
+        return 500;
+      case RestLogLevel.none:
+        return 0;
     }
   }
 

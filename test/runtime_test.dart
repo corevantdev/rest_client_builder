@@ -96,6 +96,92 @@ void main() {
       expect(result.isFailure, isTrue);
       expect(result.errorOrNull?.message, contains('not implemented'));
     });
+
+    group('RestResponseMapper model conversion try-catch', () {
+      final successResponse = Success<RestResponse>(
+        BasicRestResponse(
+          statusCode: 200,
+          request: _FakeRequest(),
+          data: {'name': 'Alice', 'age': 30},
+        ),
+      );
+
+      test('mapModel succeeds for valid model conversion', () {
+        final res = RestResponseMapper.mapModel(
+          successResponse,
+          (json) => json['name'] as String,
+        );
+        expect(res.isSuccess, isTrue);
+        expect(res.getOrThrow(), 'Alice');
+      });
+
+      test('mapModel catches exceptions in fromJson and returns Failure', () {
+        final res = RestResponseMapper.mapModel<String>(
+          successResponse,
+          (json) => throw const FormatException('Corrupt user field'),
+        );
+        expect(res.isFailure, isTrue);
+        expect(res.errorOrNull?.message, contains('Corrupt user field'));
+      });
+
+      test('mapModel catches validation error for non-map data', () {
+        final nonMapResponse = Success<RestResponse>(
+          BasicRestResponse(
+            statusCode: 200,
+            request: _FakeRequest(),
+            data: 'not a map',
+          ),
+        );
+        final res = RestResponseMapper.mapModel<String>(
+          nonMapResponse,
+          (json) => json['name'] as String,
+        );
+        expect(res.isFailure, isTrue);
+        expect(res.errorOrNull?.message, contains('Expected JSON object'));
+      });
+
+      test('mapModelList catches item conversion error', () {
+        final listResponse = Success<RestResponse>(
+          BasicRestResponse(
+            statusCode: 200,
+            request: _FakeRequest(),
+            data: [
+              {'id': 1},
+              {'id': 'not-int'},
+            ],
+          ),
+        );
+        final res = RestResponseMapper.mapModelList<int>(
+          listResponse,
+          (json) {
+            if (json['id'] is! int) {
+              throw const FormatException('Expected integer id');
+            }
+            return json['id'] as int;
+          },
+        );
+        expect(res.isFailure, isTrue);
+        expect(res.errorOrNull?.message, contains('Expected integer id'));
+      });
+
+      test('mapModelList catches non-list data', () {
+        final res = RestResponseMapper.mapModelList<String>(
+          successResponse,
+          (json) => json['name'] as String,
+        );
+        expect(res.isFailure, isTrue);
+        expect(res.errorOrNull?.message, contains('Expected JSON array'));
+      });
+
+      test('mapCustom catches custom decoder error', () {
+        final res = RestResponseMapper.mapCustom<int>(
+          successResponse,
+          (data) => throw StateError('Decoder failed'),
+        );
+        expect(res.isFailure, isTrue);
+        expect(res.errorOrNull?.message, contains('Decoder failed'));
+      });
+    });
   });
 }
 

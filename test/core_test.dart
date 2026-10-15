@@ -148,6 +148,22 @@ void main() {
       logger.info('ignored');
     });
 
+    test('ConsoleRestLogger logs via developer.log across levels', () {
+      const logger = ConsoleRestLogger(level: RestLogLevel.verbose, useColors: true);
+      expect(logger.level, RestLogLevel.verbose);
+      logger.error('err', error: Exception('test error'), stackTrace: StackTrace.current);
+      logger.warning('warn');
+      logger.info('info');
+      logger.debug('dbg');
+      logger.verbose('verb');
+    });
+
+    test('ConsoleRestLogger without colors', () {
+      const logger = ConsoleRestLogger(level: RestLogLevel.debug, useColors: false);
+      logger.debug('uncolored');
+      logger.error('err', error: 'string error');
+    });
+
     test('RestLogLevel threshold comparison', () {
       expect(RestLogLevel.error.isEnabled(RestLogLevel.info), isTrue);
       expect(RestLogLevel.debug.isEnabled(RestLogLevel.info), isFalse);
