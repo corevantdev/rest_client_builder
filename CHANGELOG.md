@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.4.7
+
+### ✨ Improvements & Bug Fixes
+
+- **Human-Readable Timeout & Connection Error Mapping**:
+  - Automatically cleans and maps verbose Dio exceptions (such as timeouts with internal exception advice) into clear, concise error messages (e.g. `Request timeout: took longer than 15s to receive data.`).
+  - Automatically extracts backend error messages from response payloads (e.g. `message`, `error`, `msg`, `detail`) instead of falling back to raw `HTTP 400`/`HTTP 404` status codes.
+  - Raw Dio messages and original causes remain preserved in `RestError.details['rawMessage']` and `RestError.cause` for debugging.
+
+- **Clean Console Error Logging**:
+  - `LoggingRestInterceptor.onError` now logs the formatted error message in red ANSI text without dumping the exception object and 10-line stack trace to the console.
+  - `ConsoleRestLogger` only passes `error` and `stackTrace` to `developer.log` when `RestLogLevel.verbose` is active, preventing Flutter's console logger from printing raw crash-like stack traces for ordinary network failures.
+
+- **Defensive Client Execution**:
+  - Wrapped `DioRestClient.execute` in a defensive `try-catch` to ensure unexpected transport errors are always mapped to `Failure<RestResponse>` rather than throwing uncaught exceptions to the caller.
+
+---
+
 ## 1.4.6
 
 ### ✨ New Features & Improvements

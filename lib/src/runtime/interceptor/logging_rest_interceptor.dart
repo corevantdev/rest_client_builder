@@ -68,7 +68,7 @@ class LoggingRestInterceptor implements RestInterceptor {
 
   @override
   Future<RestResult<RestResponse>> onError(RestError error) async {
-    logger.error('← ERROR: ${error.message}', error: error, stackTrace: error.stackTrace);
+    logger.error('← ERROR: ${error.message}');
     return Failure<RestResponse>(error);
   }
 

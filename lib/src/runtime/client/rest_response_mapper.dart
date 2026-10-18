@@ -191,9 +191,11 @@ abstract final class RestResponseMapper {
     return result.when(
       success: (response) {
         if (!response.isSuccess) {
+          final message = _extractErrorMessage(response.data) ??
+              'HTTP ${response.statusCode}';
           return Failure<void>(
             RestError.http(
-              'HTTP ${response.statusCode}',
+              message,
               statusCode: response.statusCode,
               details: {
                 'body': response.data,
@@ -238,9 +240,11 @@ abstract final class RestResponseMapper {
     return result.when(
       success: (response) {
         if (!response.isSuccess) {
+          final message = _extractErrorMessage(response.data) ??
+              'HTTP ${response.statusCode}';
           return Failure<Stream<List<int>>>(
             RestError.http(
-              'HTTP \${response.statusCode}',
+              message,
               statusCode: response.statusCode,
               details: {
                 'body': response.data,
@@ -295,9 +299,11 @@ abstract final class RestResponseMapper {
     return result.when(
       success: (response) {
         if (!response.isSuccess) {
+          final message = _extractErrorMessage(response.data) ??
+              'HTTP ${response.statusCode}';
           return Failure<T>(
             RestError.http(
-              'HTTP ${response.statusCode}',
+              message,
               statusCode: response.statusCode,
               details: {
                 'body': response.data,
@@ -316,5 +322,18 @@ abstract final class RestResponseMapper {
       },
       failure: (error) => Failure<T>(error),
     );
+  }
+
+  static String? _extractErrorMessage(Object? data) {
+    if (data is Map) {
+      final message =
+          data['message'] ?? data['error'] ?? data['msg'] ?? data['detail'];
+      if (message is String && message.trim().isNotEmpty) {
+        return message.trim();
+      }
+    } else if (data is String && data.trim().isNotEmpty) {
+      return data.trim();
+    }
+    return null;
   }
 }

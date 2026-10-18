@@ -117,15 +117,15 @@ class ConsoleRestLogger extends RestLogger {
         : '[rest_client_builder][${level.name}]';
 
     final buffer = StringBuffer('$prefix $message');
-    if (error != null) {
+    if (error != null && !message.contains(error.toString())) {
       buffer.write(useColors ? ' $_red| error: $error$_reset' : ' | error: $error');
     }
     developer.log(
       buffer.toString(),
       name: 'rest_client_builder',
       level: _developerLogLevel(level),
-      error: error,
-      stackTrace: stackTrace,
+      error: this.level == RestLogLevel.verbose ? error : null,
+      stackTrace: this.level == RestLogLevel.verbose ? stackTrace : null,
     );
   }
 

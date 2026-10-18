@@ -181,6 +181,23 @@ void main() {
         expect(res.isFailure, isTrue);
         expect(res.errorOrNull?.message, contains('Decoder failed'));
       });
+
+      test('mapModel extracts backend error message on non-2xx response', () {
+        final errorResponse = Success<RestResponse>(
+          BasicRestResponse(
+            statusCode: 404,
+            request: _FakeRequest(),
+            data: {'message': 'Location not found'},
+          ),
+        );
+        final res = RestResponseMapper.mapModel<String>(
+          errorResponse,
+          (json) => json['name'] as String,
+        );
+        expect(res.isFailure, isTrue);
+        expect(res.errorOrNull?.message, 'Location not found');
+        expect(res.errorOrNull?.statusCode, 404);
+      });
     });
   });
 }

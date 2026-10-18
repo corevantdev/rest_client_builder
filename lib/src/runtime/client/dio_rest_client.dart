@@ -95,76 +95,85 @@ class DioRestClient implements RestClient {
 
   @override
   Future<RestResult<RestResponse>> execute(RestRequest request) async {
-    final prepared = _prepareRequest(request);
-    final options = readRestExecutionOptions(prepared.extras);
-    final cacheDuration = prepared.extras['cacheDuration'] as Duration?;
+    try {
+      final prepared = _prepareRequest(request);
+      final options = readRestExecutionOptions(prepared.extras);
+      final cacheDuration = prepared.extras['cacheDuration'] as Duration?;
 
-    if (cacheDuration != null && cacheDuration > Duration.zero) {
-      final cacheKey = '${prepared.method}:${prepared.url ?? prepared.path}';
-      final cached = RestResponseCache.get(cacheKey);
-      if (cached != null) {
-        if (config.enableLog) {
-          config.logger.info('Cache HIT for $cacheKey');
+      if (cacheDuration != null && cacheDuration > Duration.zero) {
+        final cacheKey = '${prepared.method}:${prepared.url ?? prepared.path}';
+        final cached = RestResponseCache.get(cacheKey);
+        if (cached != null) {
+          if (config.enableLog) {
+            config.logger.info('Cache HIT for $cacheKey');
+          }
+          return Success<RestResponse>(cached);
         }
-        return Success<RestResponse>(cached);
       }
+
+      final pipeline = DefaultInterceptorPipeline(
+        interceptorsForRequest(prepared),
+      );
+      final maxAttempts =
+          (options.retryMaxAttempts ?? config.retryMaxAttempts) < 1
+              ? 1
+              : (options.retryMaxAttempts ?? config.retryMaxAttempts);
+      final enableLog = options.enableLog ?? config.enableLog;
+
+      RestResult<RestResponse>? lastFailure;
+
+      for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+        if (enableLog && attempt > 1) {
+          config.logger.info('Retry attempt $attempt/$maxAttempts');
+        }
+
+        final result = await pipeline.run(prepared, _engine.send);
+
+        if (result.isSuccess) {
+          final response = result.dataOrNull!;
+          if (cacheDuration != null &&
+              cacheDuration > Duration.zero &&
+              response.isSuccess) {
+            final cacheKey =
+                '${prepared.method}:${prepared.url ?? prepared.path}';
+            RestResponseCache.put(cacheKey, response, cacheDuration);
+          }
+          final shouldRetry = !response.isSuccess &&
+              attempt < maxAttempts &&
+              _shouldRetryStatus(response.statusCode, options.retryStatusCodes);
+          if (!shouldRetry) {
+            return result;
+          }
+          lastFailure = Failure<RestResponse>(
+            RestError.http(
+              'HTTP ${response.statusCode}',
+              statusCode: response.statusCode,
+              details: {'body': response.data},
+            ),
+          );
+        } else {
+          final error = result.errorOrNull!;
+          final shouldRetry = attempt < maxAttempts && _shouldRetryError(error);
+          if (!shouldRetry) {
+            return result;
+          }
+          lastFailure = result;
+        }
+
+        final retryDelay = options.retryDelay ?? config.retryDelay;
+        if (retryDelay > Duration.zero) {
+          await Future<void>.delayed(retryDelay);
+        }
+      }
+
+      return lastFailure ??
+          Failure<RestResponse>(
+              RestError.unknown('Request failed without result'));
+    } on RestError catch (error) {
+      return Failure<RestResponse>(error);
+    } catch (error, stackTrace) {
+      return Failure<RestResponse>(RestError.fromException(error, stackTrace));
     }
-
-    final pipeline = DefaultInterceptorPipeline(
-      interceptorsForRequest(prepared),
-    );
-    final maxAttempts =
-        (options.retryMaxAttempts ?? config.retryMaxAttempts) < 1
-            ? 1
-            : (options.retryMaxAttempts ?? config.retryMaxAttempts);
-    final enableLog = options.enableLog ?? config.enableLog;
-
-    RestResult<RestResponse>? lastFailure;
-
-    for (var attempt = 1; attempt <= maxAttempts; attempt++) {
-      if (enableLog && attempt > 1) {
-        config.logger.info('Retry attempt $attempt/$maxAttempts');
-      }
-
-      final result = await pipeline.run(prepared, _engine.send);
-
-      if (result.isSuccess) {
-        final response = result.dataOrNull!;
-        if (cacheDuration != null && cacheDuration > Duration.zero && response.isSuccess) {
-          final cacheKey = '${prepared.method}:${prepared.url ?? prepared.path}';
-          RestResponseCache.put(cacheKey, response, cacheDuration);
-        }
-        final shouldRetry = !response.isSuccess &&
-            attempt < maxAttempts &&
-            _shouldRetryStatus(response.statusCode, options.retryStatusCodes);
-        if (!shouldRetry) {
-          return result;
-        }
-        lastFailure = Failure<RestResponse>(
-          RestError.http(
-            'HTTP ${response.statusCode}',
-            statusCode: response.statusCode,
-            details: {'body': response.data},
-          ),
-        );
-      } else {
-        final error = result.errorOrNull!;
-        final shouldRetry = attempt < maxAttempts && _shouldRetryError(error);
-        if (!shouldRetry) {
-          return result;
-        }
-        lastFailure = result;
-      }
-
-      final retryDelay = options.retryDelay ?? config.retryDelay;
-      if (retryDelay > Duration.zero) {
-        await Future<void>.delayed(retryDelay);
-      }
-    }
-
-    return lastFailure ??
-        Failure<RestResponse>(
-            RestError.unknown('Request failed without result'));
   }
 
   @override

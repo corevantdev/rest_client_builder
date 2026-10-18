@@ -176,6 +176,38 @@ void main() {
       expect(connection.code, RestErrorCodes.connection);
     });
 
+    test('DioErrorMapper maps verbose Dio timeout into clean human-readable message', () {
+      final timeout = DioErrorMapper.fromDioException(
+        DioException(
+          requestOptions: RequestOptions(path: '/search'),
+          type: DioExceptionType.receiveTimeout,
+          message:
+              'The request took longer than 0:00:15.000000 to receive data. It was aborted. To get rid of this exception, try raising the RequestOptions.receiveTimeout above the duration of 0:00:15.000000 or improve the response time of the server.',
+        ),
+      );
+      expect(timeout.code, RestErrorCodes.timeout);
+      expect(timeout.statusCode, 408);
+      expect(timeout.message, 'Request timeout: took longer than 15s to receive data.');
+      expect(timeout.details?['rawMessage'], contains('To get rid of this exception'));
+    });
+
+    test('DioErrorMapper extracts backend error message on badResponse', () {
+      final badResp = DioErrorMapper.fromDioException(
+        DioException(
+          requestOptions: RequestOptions(path: '/user'),
+          type: DioExceptionType.badResponse,
+          response: Response(
+            requestOptions: RequestOptions(path: '/user'),
+            statusCode: 400,
+            data: {'message': 'Invalid query parameters'},
+          ),
+        ),
+      );
+      expect(badResp.code, RestErrorCodes.http);
+      expect(badResp.statusCode, 400);
+      expect(badResp.message, 'Invalid query parameters');
+    });
+
     test('configures native IOHttpClientAdapter connection pool settings', () {
       final dio = Dio();
       DioRestClient(
